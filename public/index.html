@@ -3115,32 +3115,36 @@
             box-shadow: 0 6px 25px rgba(255, 158, 181, 0.5);
         }
 
-        /* Floating AI Chat Button (left side, mirrors Payments) */
+        /* Floating AI Chat Button - round logo style (mirrors admin chat button) */
         .floating-ai-btn {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
+            bottom: 1.5rem;
+            left: 1.5rem;
             right: auto;
             z-index: 9997;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.7rem 1.2rem;
-            background: linear-gradient(135deg, var(--chocolate-brown) 0%, var(--dark-chocolate) 100%);
-            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: none;
             border: none;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            font-weight: 700;
-            font-family: 'Quicksand', sans-serif;
             cursor: pointer;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(74, 55, 40, 0.4);
-            transition: all 0.3s ease;
+            padding: 0;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 6px 18px rgba(255,107,157,0.55));
+            animation: cakeBounce 3s ease-in-out infinite;
+        }
+        .floating-ai-btn img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255,158,181,0.8);
+            background: linear-gradient(135deg, #FFD1DC, #FF9EB5);
+            display: block;
         }
         .floating-ai-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 6px 25px rgba(74, 55, 40, 0.55);
+            transform: scale(1.12) rotate(-5deg);
+            filter: drop-shadow(0 10px 28px rgba(255,107,157,0.7));
         }
 
         /* ═══════════════════════════════════
@@ -3454,8 +3458,8 @@
     </a>
 
     <!-- Floating AI Chat Button -->
-    <button class="floating-ai-btn" onclick="if(window.toggleChat){window.toggleChat();var b=document.getElementById('heroAiBubble');if(b)b.style.display='none';}" title="Chat with our AI assistant">
-        🤖 Ask AI
+    <button class="floating-ai-btn" id="floatingAiBtn" title="Chat with Dulce's AI Assistant">
+        <img src="images/logo.png" onerror="this.style.display='none';this.parentNode.innerHTML='🤖'" alt="AI Assistant">
     </button>
 
     <!-- Global Floating Icons Background -->
@@ -7774,6 +7778,16 @@ PERSONALITY: Be warm, sweet and enthusiastic. Use cake/sweet emojis occasionally
         }
     }
     window.toggleChat = toggleChat;
+
+    // Attach floating AI button click after function is ready
+    var _fab = document.getElementById('floatingAiBtn');
+    if (_fab) {
+        _fab.addEventListener('click', function() {
+            toggleChat();
+            var b = document.getElementById('heroAiBubble');
+            if (b) b.style.display = 'none';
+        });
+    }
 
     // Show invite bubble after 3s if chat hasn't been opened yet
     setTimeout(function() {

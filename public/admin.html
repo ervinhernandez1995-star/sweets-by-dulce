@@ -570,7 +570,11 @@ async function aiAnalyzeImage(){
   const btn=document.getElementById('aiAb');const ico=document.getElementById('aiAi');
   btn.disabled=true;ico.className='fas fa-spinner spin';
   try{
-    const prompt='You are a bakery product expert for Sweets by Dulce in New York.\n\nProduct name typed: "'+(nm||'(none)')+'"\nCategory: '+(CL[cat]||'dessert')+'\nImage filename hint: "'+imgHint+'"\n\nBased on the image filename, infer what the dessert looks like (e.g. unicornio/unicorn = colorful festive; tiramisu = classic Italian layered; fresa/strawberry = fresh fruit; chocolate = rich dark). Use that context to:\n1. Write a vivid 2-3 sentence description highlighting flavors, decorations and occasion\n2. Suggest a fitting product name based on what the image filename implies\n3. Suggest a badge: "best-seller" for universally popular items (chocolate, red velvet, unicorn), "limited" for holiday/seasonal items, "new" for unique or uncommon items, "" for standard items\n4. Suggest a competitive New York market price\n\nRespond ONLY valid JSON (no markdown, no extra text):\n{"description":"...","price":65,"price_note":"brief reason","name_suggestion":"product name based on image","badge":"best-seller|limited|new|"}';
+    const isDrink=cat==='drinks';
+    const productType=isDrink?'drink/beverage':'bakery dessert';
+    const priceGuide=isDrink?'$8–$18 for specialty drinks in New York':'$35–$120 for custom desserts in New York';
+    const badgeGuide=isDrink?'"new" for unique seasonal drinks, "best-seller" for popular drinks like hot chocolate or frappuccino, "limited" for holiday drinks, "" for standard':'\"best-seller\" for universally popular items (chocolate, red velvet, unicorn), \"limited\" for holiday/seasonal, \"new\" for unique items, \"\" for standard';
+    const prompt='You are a product expert for Sweets by Dulce in New York. The shop sells custom desserts AND specialty drinks.\n\nProduct type: '+productType+'\nCategory: '+(CL[cat]||cat)+'\nProduct name typed: "'+(nm||'(none)')+'"\nImage filename hint: "'+imgHint+'"\n\nIMPORTANT: This is a '+productType+'. Do NOT describe it as a cake or dessert if the category is Drinks.\n\nBased on the category and image filename, write an accurate description.\n- For drinks: describe the beverage (flavor, texture, temperature, garnish, occasion)\n- For desserts: describe the cake/cupcake (flavors, decoration, occasion)\n\nAlso suggest:\n1. A fitting product name based on the image filename and category\n2. A badge: '+badgeGuide+'\n3. A competitive price ('+priceGuide+')\n\nRespond ONLY valid JSON (no markdown, no extra text):\n{"description":"2-3 sentence vivid description accurate to the product type","price":65,"price_note":"brief reason","name_suggestion":"product name based on image and category","badge":"best-seller|limited|new|"}';
     const reply=await groq([{role:'user',content:prompt}],300);
     let j;try{j=JSON.parse(reply.replace(/```json?/g,'').replace(/```/g,'').trim());}
     catch{const dm=reply.match(/"description"\s*:\s*"([^"]+)"/);const pm=reply.match(/"price"\s*:\s*(\d+)/);const nm2=reply.match(/"name_suggestion"\s*:\s*"([^"]+)"/);const bm=reply.match(/"badge"\s*:\s*"([^"]*)"/);
@@ -603,8 +607,11 @@ async function aiEditGroq(){
   const btn=document.getElementById('eAiAb');const ico=document.getElementById('eAiAi');
   btn.disabled=true;ico.className='fas fa-spinner spin';
   try{
-    const prompt='You are a bakery product expert for Sweets by Dulce in New York.\n\nProduct: "'+(nm||'custom handcrafted dessert')+'"\nCategory: '+(CL[cat]||'dessert')+'\n\nGenerate description and competitive New York market price.\nRespond ONLY valid JSON (no markdown):\n{"description":"2-3 sentence description highlighting flavors decoration and occasion","price":65,"price_note":"brief reason","name_suggestion":"suggested product name if original unclear"}';
-    const reply=await groq([{role:'user',content:prompt}],220);
+    const isDrink=cat==='drinks';
+    const productType=isDrink?'drink/beverage':'bakery dessert';
+    const priceGuide=isDrink?'$8–$18 for specialty drinks':'$35–$120 for custom desserts';
+    const prompt='You are a product expert for Sweets by Dulce in New York. The shop sells custom desserts AND specialty drinks.\n\nProduct type: '+productType+'\nCategory: '+(CL[cat]||cat)+'\nProduct name: "'+(nm||'(none)')+'"\n\nIMPORTANT: This is a '+productType+'. Do NOT describe it as a cake if the category is Drinks.\n- For drinks: describe flavor, texture, temperature, garnish, occasion\n- For desserts: describe flavors, decoration, occasion\n\nPrice guide: '+priceGuide+'\n\nRespond ONLY valid JSON (no markdown):\n{"description":"2-3 sentence description accurate to the product type","price":65,"price_note":"brief reason","name_suggestion":"suggested name if current one is unclear"}';
+    const reply=await groq([{role:'user',content:prompt}],250);
     let j;try{j=JSON.parse(reply.replace(/```json?/g,'').replace(/```/g,'').trim());}
     catch{const dm=reply.match(/"description"\s*:\s*"([^"]+)"/);const pm=reply.match(/"price"\s*:\s*(\d+)/);const nm2=reply.match(/"name_suggestion"\s*:\s*"([^"]+)"/);
       j={description:dm?dm[1]:reply.slice(0,200),price:pm?parseInt(pm[1]):65,price_note:'NY market rate',name_suggestion:nm2?nm2[1]:''};}
