@@ -1650,6 +1650,9 @@
             color: #3D2914;
             margin-bottom: 0.8rem;
             font-weight: 600;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
         }
 
         /* Fixed Modal Footer - Always Visible at bottom of wrapper */
@@ -3111,6 +3114,34 @@
             box-shadow: 0 6px 25px rgba(255, 158, 181, 0.5);
         }
 
+        /* Floating AI Chat Button (left side, mirrors Payments) */
+        .floating-ai-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: auto;
+            z-index: 9997;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.2rem;
+            background: linear-gradient(135deg, var(--chocolate-brown) 0%, var(--dark-chocolate) 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            font-family: 'Quicksand', sans-serif;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(74, 55, 40, 0.4);
+            transition: all 0.3s ease;
+        }
+        .floating-ai-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 25px rgba(74, 55, 40, 0.55);
+        }
+
         /* ═══════════════════════════════════
            GROQ AI CHATBOT
         ═══════════════════════════════════ */
@@ -3421,6 +3452,11 @@
         💳 Payments
     </a>
 
+    <!-- Floating AI Chat Button -->
+    <button class="floating-ai-btn" onclick="toggleChat(); document.getElementById('heroAiBubble').style.display='none';" title="Chat with our AI assistant">
+        🤖 Ask AI
+    </button>
+
     <!-- Global Floating Icons Background -->
     <div class="floating-icons" id="floatingIconsGlobal"><span class="floating-icon blur" style="left: 97.6721%; top: 4.35469%; animation-delay: 0.790933s; animation-duration: 7.90441s; font-size: 1.95861rem; z-index: 1;">🍓</span><span class="floating-icon blur" style="left: 46.0676%; top: 31.1076%; animation-delay: 2.87447s; animation-duration: 8.15695s; font-size: 1.71158rem; z-index: 1;">🍰</span><span class="floating-icon blur" style="left: 52.7596%; top: 76.0745%; animation-delay: 1.82879s; animation-duration: 6.13433s; font-size: 1.28537rem; z-index: 2;">🧁</span><span class="floating-icon" style="left: 42.0705%; top: 18.0619%; animation-delay: 6.71244s; animation-duration: 6.39088s; font-size: 2.16481rem; z-index: 1;">🎂</span><span class="floating-icon blur" style="left: 32.7796%; top: 48.656%; animation-delay: 5.61113s; animation-duration: 7.71973s; font-size: 2.14672rem; z-index: 1;">🍫</span><span class="floating-icon blur" style="left: 90.5712%; top: 2.68932%; animation-delay: 2.17642s; animation-duration: 7.04799s; font-size: 2.42341rem; z-index: 1;">💕</span><span class="floating-icon blur" style="left: 30.9899%; top: 84.5363%; animation-delay: 6.28514s; animation-duration: 7.61643s; font-size: 2.04655rem; z-index: 1;">✨</span><span class="floating-icon" style="left: 59.4407%; top: 42.3836%; animation-delay: 3.37303s; animation-duration: 7.98166s; font-size: 1.54029rem; z-index: 0;">⭐</span><span class="floating-icon blur" style="left: 13.2606%; top: 26.6198%; animation-delay: 7.21779s; animation-duration: 8.26677s; font-size: 1.53976rem; z-index: 1;">💫</span><span class="floating-icon blur" style="left: 55.2941%; top: 53.9132%; animation-delay: 0.595192s; animation-duration: 7.68943s; font-size: 2.35766rem; z-index: 0;">🍓</span><span class="floating-icon blur" style="left: 58.1122%; top: 68.4895%; animation-delay: 6.90404s; animation-duration: 6.1997s; font-size: 2.21645rem; z-index: 2;">🍋</span><span class="floating-icon" style="left: 14.5136%; top: 5.01602%; animation-delay: 7.59456s; animation-duration: 8.1691s; font-size: 1.38486rem; z-index: 2;">🍒</span><span class="floating-icon blur" style="left: 35.1695%; top: 46.6755%; animation-delay: 2.13457s; animation-duration: 9.85803s; font-size: 1.84736rem; z-index: 0;">🍪</span><span class="floating-icon blur" style="left: 27.9871%; top: 18.334%; animation-delay: 5.2268s; animation-duration: 6.1273s; font-size: 2.18827rem; z-index: 1;">🍩</span><span class="floating-icon blur" style="left: 36.4039%; top: 67.2431%; animation-delay: 1.51152s; animation-duration: 8.32384s; font-size: 1.62188rem; z-index: 0;">🧇</span><span class="floating-icon" style="left: 0.6241%; top: 1.02535%; animation-delay: 0.948631s; animation-duration: 9.6273s; font-size: 1.80823rem; z-index: 2;">🥐</span><span class="floating-icon blur" style="left: 43.8382%; top: 16.6075%; animation-delay: 2.312s; animation-duration: 9.70103s; font-size: 1.22702rem; z-index: 2;">🥯</span><span class="floating-icon blur" style="left: 95.7352%; top: 19.6624%; animation-delay: 3.44928s; animation-duration: 9.83046s; font-size: 1.91607rem; z-index: 1;">🥞</span><span class="floating-icon blur" style="left: 38.6684%; top: 92.2621%; animation-delay: 4.61988s; animation-duration: 7.56522s; font-size: 1.39425rem; z-index: 0;">🧇</span><span class="floating-icon" style="left: 15.5114%; top: 35.5447%; animation-delay: 6.63241s; animation-duration: 8.50711s; font-size: 1.28231rem; z-index: 2;">🍯</span><span class="floating-icon blur" style="left: 65.1173%; top: 93.5211%; animation-delay: 0.305254s; animation-duration: 6.90221s; font-size: 1.4208rem; z-index: 2;">🍓</span><span class="floating-icon blur" style="left: 75.6928%; top: 74.6089%; animation-delay: 6.59589s; animation-duration: 6.90783s; font-size: 2.11286rem; z-index: 1;">🍰</span><span class="floating-icon blur" style="left: 58.3287%; top: 11.4655%; animation-delay: 2.75306s; animation-duration: 8.4077s; font-size: 1.04051rem; z-index: 0;">🧁</span><span class="floating-icon" style="left: 25.367%; top: 29.2959%; animation-delay: 5.79423s; animation-duration: 9.4536s; font-size: 1.28692rem; z-index: 2;">🎂</span><span class="floating-icon blur" style="left: 24.3033%; top: 72.0391%; animation-delay: 3.75233s; animation-duration: 7.43159s; font-size: 1.77881rem; z-index: 0;">🍫</span><span class="floating-icon blur" style="left: 55.4219%; top: 94.8734%; animation-delay: 5.61561s; animation-duration: 9.74911s; font-size: 1.97198rem; z-index: 0;">💕</span><span class="floating-icon blur" style="left: 10.8265%; top: 24.8243%; animation-delay: 4.8373s; animation-duration: 8.97253s; font-size: 1.5771rem; z-index: 2;">✨</span><span class="floating-icon" style="left: 38.9741%; top: 54.6865%; animation-delay: 6.17011s; animation-duration: 6.71057s; font-size: 2.34081rem; z-index: 0;">⭐</span><span class="floating-icon blur" style="left: 1.03824%; top: 94.8142%; animation-delay: 7.10992s; animation-duration: 9.54223s; font-size: 2.32025rem; z-index: 1;">💫</span><span class="floating-icon blur" style="left: 9.45773%; top: 49.5833%; animation-delay: 7.53942s; animation-duration: 6.36861s; font-size: 2.19322rem; z-index: 2;">🍓</span><span class="floating-icon blur" style="left: 9.36755%; top: 78.4366%; animation-delay: 7.0682s; animation-duration: 8.57101s; font-size: 1.2961rem; z-index: 2;">🍋</span><span class="floating-icon" style="left: 86.2039%; top: 38.5872%; animation-delay: 0.70332s; animation-duration: 9.98857s; font-size: 2.11968rem; z-index: 1;">🍒</span><span class="floating-icon blur" style="left: 70.4575%; top: 35.1957%; animation-delay: 1.62573s; animation-duration: 8.61781s; font-size: 2.44691rem; z-index: 0;">🍪</span><span class="floating-icon blur" style="left: 4.00802%; top: 99.3823%; animation-delay: 4.02151s; animation-duration: 8.213s; font-size: 2.45127rem; z-index: 1;">🍩</span><span class="floating-icon blur" style="left: 32.7998%; top: 64.6294%; animation-delay: 4.0233s; animation-duration: 6.73015s; font-size: 2.34733rem; z-index: 0;">🧇</span></div>
 
@@ -3485,9 +3521,6 @@
                 </button>
                 <button class="hero-btn hero-btn-secondary" onclick="scrollToSection('contacto')">
                     <i class="fas fa-phone"></i> Contact Us
-                </button>
-                <button class="hero-btn hero-btn-ai" onclick="toggleChat(); document.getElementById('heroAiBubble').style.display='none';">
-                    <i class="fas fa-robot"></i> Ask AI
                 </button>
             </div>
         </div>

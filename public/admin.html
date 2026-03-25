@@ -361,6 +361,15 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
       <h3>✏️ Edit Product</h3>
       <button class="mc2" onclick="closeEdit()"><i class="fas fa-times"></i></button>
     </div>
+    <button class="aib" id="eAiAb" onclick="aiEditGroq()" style="margin-bottom:.8rem;width:100%">
+      <i class="fas fa-robot" id="eAiAi"></i> 🤖 Groq: Generate Description &amp; Price
+    </button>
+    <div id="eAiR" style="display:none;background:rgba(255,209,220,.25);border-radius:10px;padding:.7rem;margin-bottom:.8rem;font-size:.83rem;font-weight:600">
+      <div id="eAiRd" style="margin-bottom:.3rem;color:#4A3728"></div>
+      <div id="eAiRp" style="color:#c0392b;font-size:.9rem"></div>
+      <div id="eAiRm" style="opacity:.7;font-size:.78rem;margin-top:.2rem"></div>
+      <button onclick="useAIEdit()" style="margin-top:.5rem;padding:.3rem .9rem;background:var(--dp);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:.8rem">✅ Apply</button>
+    </div>
     <div class="fg">
       <div class="fi"><label>Name *</label><input type="text" id="mN" maxlength="80"></div>
       <div class="fi"><label>Price ($)</label><input type="number" id="mP" min="0" step="1"></div>
@@ -583,6 +592,37 @@ function useAI(){
   toast('✅ Applied!','ok');
 }
 
+// ── GROQ for Edit Modal ──
+let editAiD=null;
+async function aiEditGroq(){
+  const nm=document.getElementById('mN').value.trim();
+  const cat=document.getElementById('mC').value;
+  const btn=document.getElementById('eAiAb');const ico=document.getElementById('eAiAi');
+  btn.disabled=true;ico.className='fas fa-spinner spin';
+  try{
+    const prompt='You are a bakery product expert for Sweets by Dulce in New York.\n\nProduct: "'+(nm||'custom handcrafted dessert')+'"\nCategory: '+(CL[cat]||'dessert')+'\n\nGenerate description and competitive New York market price.\nRespond ONLY valid JSON (no markdown):\n{"description":"2-3 sentence description highlighting flavors decoration and occasion","price":65,"price_note":"brief reason","name_suggestion":"suggested product name if original unclear"}';
+    const reply=await groq([{role:'user',content:prompt}],220);
+    let j;try{j=JSON.parse(reply.replace(/```json?/g,'').replace(/```/g,'').trim());}
+    catch{const dm=reply.match(/"description"\s*:\s*"([^"]+)"/);const pm=reply.match(/"price"\s*:\s*(\d+)/);const nm2=reply.match(/"name_suggestion"\s*:\s*"([^"]+)"/);
+      j={description:dm?dm[1]:reply.slice(0,200),price:pm?parseInt(pm[1]):65,price_note:'NY market rate',name_suggestion:nm2?nm2[1]:''};}
+    editAiD=j;
+    document.getElementById('eAiRd').textContent=j.description||'';
+    document.getElementById('eAiRp').textContent='$'+(j.price||'—')+' starting price';
+    document.getElementById('eAiRm').textContent=(j.price_note?'💡 '+j.price_note:'')+(j.name_suggestion?' | 📝 '+j.name_suggestion:'');
+    document.getElementById('eAiR').style.display='block';
+    toast('🤖 AI suggestion ready!','ok');
+  }catch(e){toast('AI error: '+e.message.slice(0,50),'er');}
+  btn.disabled=false;ico.className='fas fa-robot';
+}
+function useAIEdit(){
+  if(!editAiD)return;
+  if(editAiD.description)document.getElementById('mD').value=editAiD.description;
+  if(editAiD.price)document.getElementById('mP').value=editAiD.price;
+  if(editAiD.name_suggestion&&!document.getElementById('mN').value.trim())document.getElementById('mN').value=editAiD.name_suggestion;
+  document.getElementById('eAiR').style.display='none';
+  toast('✅ Applied!','ok');
+}
+
 // ── AI MANAGER ──
 async function runMgr(){
   const btn=document.getElementById('aMb');const ico=document.getElementById('aMi');const res=document.getElementById('aMr');
@@ -718,6 +758,8 @@ function openEdit(id){
   document.getElementById('mN').value=p.title||'';document.getElementById('mD').value=p.description||'';
   document.getElementById('mC').value=p.category||'cakes';document.getElementById('mP').value=p.price||'';
   document.getElementById('mB').value=p.badge||'';document.getElementById('mI').value=p.image||'';
+  // Reset AI state
+  editAiD=null;document.getElementById('eAiR').style.display='none';
   document.getElementById('eOv').classList.add('on');
 }
 function closeEdit(){document.getElementById('eOv').classList.remove('on');eId=null;}
