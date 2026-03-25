@@ -1626,10 +1626,11 @@
             font-weight: 700;
             margin-bottom: 0.8rem;
             width: fit-content;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             max-width: 100%;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: break-word;
             color: white;
             text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
@@ -3453,7 +3454,7 @@
     </a>
 
     <!-- Floating AI Chat Button -->
-    <button class="floating-ai-btn" onclick="toggleChat(); document.getElementById('heroAiBubble').style.display='none';" title="Chat with our AI assistant">
+    <button class="floating-ai-btn" onclick="if(window.toggleChat){window.toggleChat();var b=document.getElementById('heroAiBubble');if(b)b.style.display='none';}" title="Chat with our AI assistant">
         🤖 Ask AI
     </button>
 
@@ -6835,13 +6836,21 @@
                 
                 // Generate badge based on product
                 let badgeHTML = '';
-                const isBestSeller = ['unicorn', 'mermaid', 'chocolate', 'red velvet'].some(keyword => product.title.toLowerCase().includes(keyword));
-                const isLimited = ['holiday', 'special event', 'anniversary', 'valentine'].some(keyword => product.category.toLowerCase().includes(keyword));
-                
-                if (isBestSeller) {
+                // Use admin-set badge first, then fall back to keyword detection
+                if (product.badge === 'best-seller') {
                     badgeHTML = '<span class="product-badge badge-best-seller">⭐ Best Seller</span>';
-                } else if (isLimited) {
+                } else if (product.badge === 'limited') {
                     badgeHTML = '<span class="product-badge badge-limited">✨ Limited Edition</span>';
+                } else if (product.badge === 'new') {
+                    badgeHTML = '<span class="product-badge badge-new">🆕 New</span>';
+                } else {
+                    const isBestSeller = ['unicorn', 'mermaid', 'chocolate', 'red velvet'].some(keyword => product.title.toLowerCase().includes(keyword));
+                    const isLimited = ['holiday', 'special event', 'anniversary', 'valentine'].some(keyword => product.category.toLowerCase().includes(keyword));
+                    if (isBestSeller) {
+                        badgeHTML = '<span class="product-badge badge-best-seller">⭐ Best Seller</span>';
+                    } else if (isLimited) {
+                        badgeHTML = '<span class="product-badge badge-limited">✨ Limited Edition</span>';
+                    }
                 }
                 
                 card.innerHTML = `
@@ -7764,6 +7773,7 @@ PERSONALITY: Be warm, sweet and enthusiastic. Use cake/sweet emojis occasionally
             setTimeout(() => { win.style.display = 'none'; }, 300);
         }
     }
+    window.toggleChat = toggleChat;
 
     // Show invite bubble after 3s if chat hasn't been opened yet
     setTimeout(function() {
