@@ -3107,36 +3107,35 @@
             position: fixed;
             bottom: 1.5rem;
             right: 1.5rem;
-            width: 60px;
-            height: 60px;
+            width: 68px;
+            height: 68px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--deep-pink), #FF4081);
+            background: none;
             border: none;
             cursor: pointer;
             z-index: 9998;
-            box-shadow: 0 6px 25px rgba(255,107,157,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.6rem;
-            transition: all 0.3s ease;
-            animation: chatPulse 2.5s infinite;
+            padding: 0;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 6px 18px rgba(255,107,157,0.55));
+            animation: cakeBounce 3s ease-in-out infinite;
         }
-        @keyframes chatPulse {
-            0%,100% { box-shadow: 0 6px 25px rgba(255,107,157,0.5); }
-            50% { box-shadow: 0 6px 35px rgba(255,107,157,0.8), 0 0 0 8px rgba(255,107,157,0.15); }
-        }
-        #chatbotBtn:hover { transform: scale(1.1); }
-        #chatbotBtn .chat-notif {
-            position: absolute;
-            top: -2px; right: -2px;
-            width: 18px; height: 18px;
-            background: #FF4757;
+        #chatbotBtn img {
+            width: 68px;
+            height: 68px;
             border-radius: 50%;
-            border: 2px solid white;
-            font-size: 0.65rem;
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: 700;
+            object-fit: cover;
+            border: 3px solid rgba(255,158,181,0.8);
+            background: linear-gradient(135deg, #FFD1DC, #FF9EB5);
+            display: block;
+        }
+        #chatbotBtn:hover {
+            transform: scale(1.12) rotate(-5deg);
+            filter: drop-shadow(0 10px 28px rgba(255,107,157,0.7));
+        }
+        @keyframes cakeBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-4px) rotate(3deg); }
+            75% { transform: translateY(-2px) rotate(-3deg); }
         }
         #chatWindow {
             position: fixed;
@@ -3158,7 +3157,25 @@
             opacity: 0;
             transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
         }
-        #chatWindow.open {
+ 
+        .chat-notif {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #FF4757;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            font-family: 'Quicksand', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            pointer-events: none;
+        }       #chatWindow.open {
             display: flex;
             transform: translateY(0);
             opacity: 1;
@@ -3321,76 +3338,7 @@
     padding: 0.5rem;
     max-width: 1450px;
 }
-/* ── CHAT BOT ── */
-.chat-fab {
-    position: fixed; bottom: 24px; right: 24px;
-    width: 62px; height: 62px; border-radius: 50%;
-    background: linear-gradient(135deg,#FF6B9D,#FF9EB5);
-    border: none; cursor: pointer;
-    box-shadow: 0 6px 24px rgba(255,107,157,.5);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem; z-index: 9000;
-    transition: all .3s cubic-bezier(.34,1.56,.64,1);
-}
-.chat-fab:hover { transform: scale(1.12); }
-.chat-badge {
-    position: absolute; top:-4px; right:-4px;
-    background:#FF4757; color:white; border-radius:50%;
-    width:20px; height:20px; font-size:.7rem; font-weight:700;
-    font-family:'Quicksand',sans-serif;
-    display:none; align-items:center; justify-content:center;
-}
-.chat-fab.has-notif .chat-badge { display:flex; }
-.chat-window {
-    position:fixed; bottom:100px; right:24px;
-    width:360px; max-width:calc(100vw - 32px);
-    height:520px; max-height:calc(100vh - 130px);
-    background:rgba(255,249,245,.97);
-    backdrop-filter:blur(20px);
-    border-radius:24px;
-    box-shadow:0 20px 60px rgba(74,55,40,.22);
-    border:1px solid rgba(255,158,181,.4);
-    display:flex; flex-direction:column;
-    z-index:8999;
-    transform:scale(.85) translateY(20px);
-    opacity:0; pointer-events:none;
-    transition:all .35s cubic-bezier(.34,1.56,.64,1);
-    overflow:hidden;
-}
-.chat-window.open { transform:scale(1) translateY(0); opacity:1; pointer-events:all; }
-.chat-header {
-    background:linear-gradient(135deg,#4A3728,#3D2914);
-    color:white; padding:1rem 1.2rem;
-    display:flex; align-items:center; gap:.8rem;
-    border-radius:24px 24px 0 0; flex-shrink:0;
-}
-.chat-avatar { width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,158,181,.6); flex-shrink:0; }
-.chat-header-info h4 { font-family:'Fredoka One',cursive; font-size:1rem; margin:0; }
-.chat-header-info p { font-size:.72rem; opacity:.75; margin:0; }
-.chat-status-dot { width:8px; height:8px; background:#2ed573; border-radius:50%; display:inline-block; margin-right:4px; animation:blink 2s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
-.chat-close-btn { margin-left:auto; background:rgba(255,255,255,.15); border:none; color:white; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:.9rem; display:flex; align-items:center; justify-content:center; }
-.chat-messages { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:.7rem; scroll-behavior:smooth; }
-.chat-messages::-webkit-scrollbar { width:4px; }
-.chat-messages::-webkit-scrollbar-thumb { background:rgba(255,158,181,.4); border-radius:4px; }
-.chat-msg { max-width:82%; padding:.65rem .9rem; border-radius:18px; font-size:.88rem; font-weight:600; line-height:1.5; font-family:'Quicksand',sans-serif; word-break:break-word; }
-.chat-msg.bot { background:rgba(255,255,255,.85); border:1px solid rgba(255,158,181,.3); border-bottom-left-radius:6px; align-self:flex-start; color:#4A3728; }
-.chat-msg.user { background:linear-gradient(135deg,#4A3728,#3D2914); color:white; border-bottom-right-radius:6px; align-self:flex-end; }
-.chat-msg.typing { background:rgba(255,255,255,.85); border:1px solid rgba(255,158,181,.3); align-self:flex-start; padding:.8rem 1.2rem; }
-.typing-dots { display:flex; gap:4px; align-items:center; }
-.typing-dots span { width:7px; height:7px; background:#FF9EB5; border-radius:50%; animation:typingBounce 1.2s infinite; }
-.typing-dots span:nth-child(2){animation-delay:.2s}
-.typing-dots span:nth-child(3){animation-delay:.4s}
-@keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
-.chat-quick-replies { display:flex; flex-wrap:wrap; gap:.4rem; padding:0 1rem .5rem; flex-shrink:0; }
-.quick-reply-btn { background:rgba(255,158,181,.15); border:1px solid rgba(255,158,181,.4); border-radius:20px; padding:.35rem .75rem; font-size:.78rem; font-weight:700; font-family:'Quicksand',sans-serif; color:#4A3728; cursor:pointer; transition:all .2s; white-space:nowrap; }
-.quick-reply-btn:hover { background:rgba(255,107,157,.2); }
-.chat-input-row { display:flex; gap:.5rem; padding:.8rem; border-top:1px solid rgba(255,158,181,.25); flex-shrink:0; }
-.chat-input { flex:1; padding:.65rem 1rem; border:2px solid rgba(255,158,181,.3); border-radius:20px; font-family:'Quicksand',sans-serif; font-size:.88rem; font-weight:600; color:#4A3728; background:rgba(255,255,255,.8); outline:none; transition:border-color .2s; }
-.chat-input:focus { border-color:#FF6B9D; }
-.chat-send-btn { width:40px; height:40px; background:linear-gradient(135deg,#FF6B9D,#FF9EB5); border:none; border-radius:50%; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.9rem; transition:all .2s; flex-shrink:0; }
-.chat-send-btn:hover { transform:scale(1.1); }
-.chat-send-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
 </style>
 
 </head>
@@ -7343,7 +7291,155 @@
         });
 
         // Initialize everything when DOM is ready
+
+// ══════════════════════════════════════════════════════
+// SMART IMAGE-PRODUCT MATCHING SYSTEM (GROQ POWERED)
+// ══════════════════════════════════════════════════════
+
+// Known image files in /images/ folder
+const KNOWN_IMAGES = [
+    'cakesicle-unicornio-arcoiris.jpg','cakesicle-flores.jpg','cakesicle-dinosaurio.jpg',
+    'cakesicle-conejito.jpg','cakesicle-cumpleaños.jpg','cakesicle-selva.jpg',
+    'cakesicle-princesa.jpg','cakesicle-sirena.jpg','cakesicle-panda.jpg',
+    'cakesicle-frozen.jpg','cakesicle-paw-patrol.jpg','cakesicle-stitch.jpg',
+    'cakesicle-minnie-mouse.jpg','cakesicle-hello-kitty.jpg','cakesicle-mickey-mouse.jpg',
+    'cakesicle-spiderman.jpg','cakesicle-avengers.jpg','cakesicle-batman.jpg',
+    'cakesicle-halloween.jpg','cakesicle-navidena-trineo.jpg','cakesicle-san-valentin.jpg',
+    'cakesicle-boda-novios.jpg','pastel-unicornio.jpg','pastel-sirena.jpg',
+    'pastel-princesa-disney.jpg','pastel-hello-kitty-flores.jpg','pastel-paw-patrol-gigante.jpg',
+    'pastel-minnie-mouse.jpg','pastel-cocomelon.jpg','pastel-hello-kitty-2.jpg',
+    'pastel-spiderman.jpg','pastel-avengers.jpg','pastel-batman.jpg','pastel-dinosaurios.jpg',
+    'pastel-cars.jpg','pastel-toy-story.jpg','pastel-peppa-pig.jpg','pastel-deportivo.jpg',
+    'pastel-cumpleaños-clasico.jpg','pastel-baby-shark.jpg','pastel-mario-bros.jpg',
+    'pastel-sonic.jpg','pastel-dragon-ball.jpg','pastel-minecraft.jpg','pastel-bob-constructor.jpg',
+    'pastel-vaquero-cowboy.jpg','pastel-zanahoria-carrots.jpg','pastel-graduacion.jpg',
+    'pastel-gimnasia-ritmica-valentina.jpg','pastel-corazon-valentine.jpg',
+    'pastel-calabaza-halloween.jpg','pastel-jack-skellington.jpg','pastel-barrica-whiskey.jpg',
+    'pastel-oreo-cumpleaños.jpg','pastel-princesa-fancy-nancy.jpg','pastel-chocolate-fresas.jpg',
+    'corazon-chocolate.jpg','ramos-rosas-chocolate.jpg','barco-chocolate.jpg',
+    'corona-chocolate.jpg','tambor-chocolate.jpg','laptop-chocolate.jpg','guitarra-chocolate.jpg',
+    'secadora-chocolate.jpg','helado-chocolate.jpg','caja-bombones.jpg',
+    'figuras-chocolate-personalizadas.jpg','fresas-chocolate-flores.jpg',
+    'cupcakes-unicornio.jpg','cupcakes-cumpleaños.jpg','cupcakes-san-valentin.jpg',
+    'cupcakes-baby-shower.jpg','cupcakes-boda.jpg','cupcakes-graduacion.jpg',
+    'cupcakes-halloween.jpg','cupcakes-navidenos-santa.jpg','cupcakes-dia-madre.jpg',
+    'cupcakes-pascua.jpg','cupcakes-florales-elegantes.jpg','cupcakes-sandia-1er-año.jpg',
+    'cupcakes-vacas-highland.jpg','cupcakes-navidad.jpg','galletas-boda.jpg',
+    'galletas-chocolate-chips.jpg','galletas-cumpleaños.jpg','galletas-navidad.jpg',
+    'galletas-tematicas-infantiles.jpg','bombas-chocolate-navidad.jpg',
+    'cake-pops-flores-encantadas.jpg','vasitos-pastel-pascua.jpg','flanes-bayas.jpg',
+    'pastel-frutas-60.jpg','pastel-flork-cumpleaños.jpg','pastel-manzana-crumb.jpg',
+    'pastel-manzana-rejilla.jpg','pastel-coco.jpg','pastel-pecana.jpg',
+    'logo.png'
+];
+
+// Match product to best image based on title+description keywords
+function smartMatchImage(product) {
+    const text = (product.title + ' ' + product.description).toLowerCase();
+    const existingImg = product.image;
+    
+    // If image is already set and looks like a real path (not placeholder), keep it
+    if (existingImg && existingImg.includes('images/') && !existingImg.includes('placeholder')) {
+        return existingImg;
+    }
+    
+    // Keyword → image mapping
+    const keywordMap = [
+        { keywords: ['unicorn','unicornio'], img: 'pastel-unicornio.jpg' },
+        { keywords: ['cocomelon','watermelon cake','sandia pastel'], img: 'pastel-cocomelon.jpg' },
+        { keywords: ['mermaid','sirena','ocean'], img: 'pastel-sirena.jpg' },
+        { keywords: ['spiderman','spider-man'], img: 'pastel-spiderman.jpg' },
+        { keywords: ['batman'], img: 'pastel-batman.jpg' },
+        { keywords: ['minecraft'], img: 'pastel-minecraft.jpg' },
+        { keywords: ['mario'], img: 'pastel-mario-bros.jpg' },
+        { keywords: ['dragon ball'], img: 'pastel-dragon-ball.jpg' },
+        { keywords: ['graduation','graduacion','congrats'], img: 'pastel-graduacion.jpg' },
+        { keywords: ['carrot','zanahoria'], img: 'pastel-zanahoria-carrots.jpg' },
+        { keywords: ['cowboy','vaquero'], img: 'pastel-vaquero-cowboy.jpg' },
+        { keywords: ['apple crumb','manzana crumb'], img: 'pastel-manzana-crumb.jpg' },
+        { keywords: ['apple lattice','manzana rejilla'], img: 'pastel-manzana-rejilla.jpg' },
+        { keywords: ['coconut','coco'], img: 'pastel-coco.jpg' },
+        { keywords: ['pecan','pecana'], img: 'pastel-pecana.jpg' },
+        { keywords: ['flork'], img: 'pastel-flork-cumpleaños.jpg' },
+        { keywords: ['jack skellington','nightmare'], img: 'pastel-jack-skellington.jpg' },
+        { keywords: ['whiskey','barrel'], img: 'pastel-barrica-whiskey.jpg' },
+        { keywords: ['oreo'], img: 'pastel-oreo-cumpleaños.jpg' },
+        { keywords: ['fruit cake 60','frutas 60'], img: 'pastel-frutas-60.jpg' },
+        { keywords: ['halloween pumpkin','calabaza'], img: 'pastel-calabaza-halloween.jpg' },
+        { keywords: ['strawberry chocolate','fresas chocolate'], img: 'fresas-chocolate-flores.jpg' },
+        { keywords: ['chocolate rose','rosas chocolate'], img: 'ramos-rosas-chocolate.jpg' },
+        { keywords: ['heart chocolate','corazon chocolate'], img: 'corazon-chocolate.jpg' },
+        { keywords: ['christmas chocolate bomb','bombas navidad'], img: 'bombas-chocolate-navidad.jpg' },
+        { keywords: ['flan berr','flanes'], img: 'flanes-bayas.jpg' },
+        { keywords: ['wedding cakesicl','boda'], img: 'cakesicle-boda-novios.jpg' },
+        { keywords: ['valentine','san valentin'], img: 'cakesicle-san-valentin.jpg' },
+        { keywords: ['halloween cakesicl'], img: 'cakesicle-halloween.jpg' },
+        { keywords: ['christmas cakesicl','navidena'], img: 'cakesicle-navidena-trineo.jpg' },
+        { keywords: ['stitch'], img: 'cakesicle-stitch.jpg' },
+        { keywords: ['frozen'], img: 'cakesicle-frozen.jpg' },
+        { keywords: ['panda'], img: 'cakesicle-panda.jpg' },
+        { keywords: ['hello kitty flores'], img: 'pastel-hello-kitty-flores.jpg' },
+        { keywords: ['hello kitty'], img: 'cakesicle-hello-kitty.jpg' },
+        { keywords: ['minnie'], img: 'cakesicle-minnie-mouse.jpg' },
+        { keywords: ['mickey'], img: 'cakesicle-mickey-mouse.jpg' },
+        { keywords: ['paw patrol gigante'], img: 'pastel-paw-patrol-gigante.jpg' },
+        { keywords: ['paw patrol'], img: 'cakesicle-paw-patrol.jpg' },
+        { keywords: ['avengers'], img: 'cakesicle-avengers.jpg' },
+        { keywords: ['batman cakesicl'], img: 'cakesicle-batman.jpg' },
+        { keywords: ['dinosaur','dinosaurio'], img: 'cakesicle-dinosaurio.jpg' },
+        { keywords: ['peppa pig'], img: 'pastel-peppa-pig.jpg' },
+        { keywords: ['baby shark'], img: 'pastel-baby-shark.jpg' },
+        { keywords: ['toy story'], img: 'pastel-toy-story.jpg' },
+        { keywords: ['cars disney','rayo mcqueen'], img: 'pastel-cars.jpg' },
+        { keywords: ['fancy nancy','princesa disney'], img: 'pastel-princesa-disney.jpg' },
+        { keywords: ['graduation cupcake'], img: 'cupcakes-graduacion.jpg' },
+        { keywords: ['halloween cupcake'], img: 'cupcakes-halloween.jpg' },
+        { keywords: ['christmas cupcake','santa cupcake'], img: 'cupcakes-navidenos-santa.jpg' },
+        { keywords: ['watermelon cupcake','sandia cupcake'], img: 'cupcakes-sandia-1er-año.jpg' },
+        { keywords: ['floral cupcake','elegant cupcake'], img: 'cupcakes-florales-elegantes.jpg' },
+        { keywords: ['highland cow','vaca highland'], img: 'cupcakes-vacas-highland.jpg' },
+        { keywords: ['christmas cupcak'], img: 'cupcakes-navidad.jpg' },
+        { keywords: ['wedding cupcak'], img: 'cupcakes-boda.jpg' },
+        { keywords: ['baby shower cupcak'], img: 'cupcakes-baby-shower.jpg' },
+        { keywords: ['mother day cupcak'], img: 'cupcakes-dia-madre.jpg' },
+        { keywords: ['easter cup','pascua cup'], img: 'cupcakes-pascua.jpg' },
+        { keywords: ['unicorn cupcak'], img: 'cupcakes-unicornio.jpg' },
+        { keywords: ['birthday cupcak'], img: 'cupcakes-cumpleaños.jpg' },
+        { keywords: ['valentine cupcak'], img: 'cupcakes-san-valentin.jpg' },
+        { keywords: ['cake pop flower','flores encantadas'], img: 'cake-pops-flores-encantadas.jpg' },
+        { keywords: ['easter cup cake','pascua vasito'], img: 'vasitos-pastel-pascua.jpg' },
+        { keywords: ['christmas cookie','navidad galleta'], img: 'galletas-navidad.jpg' },
+        { keywords: ['wedding cookie','boda galleta'], img: 'galletas-boda.jpg' },
+        { keywords: ['choc chip cookie','chips galleta'], img: 'galletas-chocolate-chips.jpg' },
+        { keywords: ['birthday cookie','cumpleaños galleta'], img: 'galletas-cumpleaños.jpg' },
+        { keywords: ['themed cookie','tematica'], img: 'galletas-tematicas-infantiles.jpg' },
+    ];
+    
+    for (const {keywords, img} of keywordMap) {
+        if (keywords.some(kw => text.includes(kw))) {
+            return 'images/' + img;
+        }
+    }
+    
+    return existingImg || 'images/placeholder.jpg';
+}
+
+// Apply smart image matching to all products on load
+function applySmartImageMatching() {
+    try {
+        if (typeof products !== 'undefined') {
+            products.forEach(p => {
+                const matched = smartMatchImage(p);
+                if (matched && matched !== p.image) {
+                    p.image = matched;
+                }
+            });
+        }
+    } catch(e) { console.warn('Image matching error:', e); }
+}
+
         document.addEventListener('DOMContentLoaded', function() {
+            applySmartImageMatching();
             renderProducts(products);
             initFloatingIcons();
             initHeroFloatingIcons();
@@ -7444,9 +7540,11 @@ window.SBD_Analytics = SBD_Analytics;
     <!-- ═══════════════════════════════
          GROQ AI CHATBOT
     ═══════════════════════════════ -->
-    <button id="chatbotBtn" onclick="toggleChat()" title="Chat with us!">
-        🎂
-        <span class="chat-notif">1</span>
+    <button id="chatbotBtn" onclick="toggleChat()" title="Chat with Dulce's AI Assistant 🎂" aria-label="Open chat">
+        <img src="images/logo.png" 
+             onerror="this.style.display='none';this.parentNode.innerHTML='🎂'+this.parentNode.innerHTML" 
+             alt="Sweets by Dulce">
+        <span class="chat-notif" id="chatNotifBadge">1</span>
     </button>
 
     <div id="chatWindow">
