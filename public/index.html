@@ -1,6 +1,11 @@
 <html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta property="og:title" content="Sweets by Dulce | Handcrafted Cakes New York">
+    <meta property="og:description" content="Custom handcrafted cakes made with love. Order yours today!">
+    <meta property="og:image" content="images/logo.png">
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link rel="apple-touch-icon" href="images/logo.png">
     <meta name="description" content="Sweets by Dulce - Handcrafted custom cakes made with love in New York">
     <title>Sweets by Dulce | Handcrafted Cakes New York</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,6 +39,51 @@
             --accent-gold: #D4AF37;
             --kawaii-accent: #FFB6C1;
             --kawaii-gold: #FFD700;
+        }
+
+
+        /* ── Enhanced Glass Morphism ── */
+        .catalog-glass-wrap {
+            background: rgba(255, 255, 255, 0.12) !important;
+            backdrop-filter: blur(22px) !important;
+            -webkit-backdrop-filter: blur(22px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            border-radius: 36px !important;
+            margin: 1.5rem auto !important;
+            padding: 1rem !important;
+        }
+        .flavor-lab-glass-wrap {
+            background: rgba(255, 255, 255, 0.10) !important;
+            backdrop-filter: blur(18px) !important;
+            -webkit-backdrop-filter: blur(18px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.22) !important;
+            border-radius: 36px !important;
+            margin: 1.5rem auto !important;
+            padding: 1rem !important;
+        }
+        /* Section headers glass */
+        .section-header {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        /* Filters glass */
+        .filters {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+        /* Search container glass */
+        .search-container {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
         }
 
         /* Button Click Animation */
@@ -719,8 +769,12 @@
         /* How to Order Section */
         .how-to-order {
             padding: 5rem 2rem;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.4);
         }
 
         .how-to-order h2 {
@@ -785,12 +839,12 @@
         }
 
         .logo {
-            width: 70px;
-            height: 70px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             object-fit: cover;
             box-shadow: 0 4px 15px var(--shadow-dark);
-            border: 3px solid rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.9);
         }
 
         .logo-text {
@@ -1043,6 +1097,14 @@
         }
 
         /* Catalog Section */
+        .catalog-wrapper {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
         .catalog {
             padding: 6rem 1.5rem;
             max-width: 1400px;
@@ -1844,8 +1906,12 @@
         /* Flavor Lab Section */
         .flavor-lab {
             padding: 5rem 2rem;
-            background: rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
             text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.4);
         }
 
         .flavor-lab h2 {
@@ -2024,7 +2090,8 @@
 
         /* Payment Methods Section */
         .payment-methods {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 242, 245, 0.95) 100%);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 242, 245, 0.95) 100%);
             padding: 5rem 2rem;
             position: relative;
             overflow: hidden;
@@ -3032,7 +3099,300 @@
             transform: translateY(-3px) scale(1.05);
             box-shadow: 0 6px 25px rgba(255, 158, 181, 0.5);
         }
+
+        /* ═══════════════════════════════════
+           GROQ AI CHATBOT
+        ═══════════════════════════════════ */
+        #chatbotBtn {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--deep-pink), #FF4081);
+            border: none;
+            cursor: pointer;
+            z-index: 9998;
+            box-shadow: 0 6px 25px rgba(255,107,157,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            transition: all 0.3s ease;
+            animation: chatPulse 2.5s infinite;
+        }
+        @keyframes chatPulse {
+            0%,100% { box-shadow: 0 6px 25px rgba(255,107,157,0.5); }
+            50% { box-shadow: 0 6px 35px rgba(255,107,157,0.8), 0 0 0 8px rgba(255,107,157,0.15); }
+        }
+        #chatbotBtn:hover { transform: scale(1.1); }
+        #chatbotBtn .chat-notif {
+            position: absolute;
+            top: -2px; right: -2px;
+            width: 18px; height: 18px;
+            background: #FF4757;
+            border-radius: 50%;
+            border: 2px solid white;
+            font-size: 0.65rem;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700;
+        }
+        #chatWindow {
+            position: fixed;
+            bottom: 5.5rem;
+            right: 1.5rem;
+            width: min(380px, calc(100vw - 2rem));
+            height: min(520px, calc(100vh - 8rem));
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(74,55,40,0.25);
+            border: 1px solid rgba(255,255,255,0.6);
+            z-index: 9997;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        #chatWindow.open {
+            display: flex;
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .chat-header {
+            background: linear-gradient(135deg, var(--chocolate-brown), var(--dark-chocolate));
+            padding: 1rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-shrink: 0;
+        }
+        .chat-header-logo {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.4);
+        }
+        .chat-header-info { flex:1; }
+        .chat-header-name {
+            font-family: 'Fredoka One', cursive;
+            color: white; font-size: 1rem;
+            line-height: 1.2;
+        }
+        .chat-header-status {
+            font-size: 0.72rem; color: rgba(255,255,255,0.7);
+            display: flex; align-items: center; gap: 0.3rem;
+        }
+        .status-dot {
+            width: 7px; height: 7px;
+            background: #2ed573; border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .chat-close-btn {
+            background: rgba(255,255,255,0.2);
+            border: none; cursor: pointer;
+            color: white; border-radius: 8px;
+            width: 30px; height: 30px;
+            font-size: 1rem;
+            display: flex; align-items:center; justify-content:center;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            scroll-behavior: smooth;
+        }
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255,158,181,0.5); border-radius: 4px;
+        }
+        .chat-msg {
+            max-width: 85%;
+            padding: 0.7rem 1rem;
+            border-radius: 18px;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            font-weight: 600;
+            animation: msgSlide 0.3s ease;
+        }
+        @keyframes msgSlide { from { opacity:0; transform:translateY(8px); } }
+        .chat-msg.bot {
+            background: rgba(255,209,220,0.5);
+            color: var(--chocolate-brown);
+            border-radius: 18px 18px 18px 4px;
+            align-self: flex-start;
+        }
+        .chat-msg.user {
+            background: var(--chocolate-brown);
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+            align-self: flex-end;
+        }
+        .chat-msg.typing {
+            background: rgba(255,209,220,0.5);
+            align-self: flex-start;
+            padding: 0.8rem 1.2rem;
+        }
+        .typing-dots { display: flex; gap: 4px; align-items: center; }
+        .typing-dots span {
+            width: 7px; height: 7px;
+            background: var(--deep-pink);
+            border-radius: 50%;
+            animation: typingBounce 1.2s infinite;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+        .chat-quick-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem 0;
+            flex-shrink: 0;
+        }
+        .quick-btn {
+            padding: 0.3rem 0.8rem;
+            background: rgba(255,158,181,0.2);
+            border: 1.5px solid rgba(255,158,181,0.5);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--chocolate-brown);
+            cursor: pointer;
+            font-family: 'Quicksand', sans-serif;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .quick-btn:hover { background: rgba(255,107,157,0.2); }
+        .chat-input-row {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.8rem 1rem;
+            border-top: 1px solid rgba(255,182,193,0.3);
+            flex-shrink: 0;
+        }
+        #chatInput {
+            flex: 1;
+            padding: 0.65rem 1rem;
+            border: 2px solid rgba(255,158,181,0.4);
+            border-radius: 20px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--chocolate-brown);
+            background: rgba(255,255,255,0.8);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        #chatInput:focus { border-color: var(--deep-pink); }
+        #chatSendBtn {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--deep-pink), #FF4081);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        #chatSendBtn:hover { transform: scale(1.1); }
     </style>
+
+<style>
+/* ── GLASS SECTION WRAPS ── */
+.catalog-glass-wrap,
+.flavor-lab-glass-wrap {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.32);
+    border-radius: 32px;
+    margin: 1.5rem auto;
+    padding: 0.5rem;
+    max-width: 1450px;
+}
+/* ── CHAT BOT ── */
+.chat-fab {
+    position: fixed; bottom: 24px; right: 24px;
+    width: 62px; height: 62px; border-radius: 50%;
+    background: linear-gradient(135deg,#FF6B9D,#FF9EB5);
+    border: none; cursor: pointer;
+    box-shadow: 0 6px 24px rgba(255,107,157,.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; z-index: 9000;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+}
+.chat-fab:hover { transform: scale(1.12); }
+.chat-badge {
+    position: absolute; top:-4px; right:-4px;
+    background:#FF4757; color:white; border-radius:50%;
+    width:20px; height:20px; font-size:.7rem; font-weight:700;
+    font-family:'Quicksand',sans-serif;
+    display:none; align-items:center; justify-content:center;
+}
+.chat-fab.has-notif .chat-badge { display:flex; }
+.chat-window {
+    position:fixed; bottom:100px; right:24px;
+    width:360px; max-width:calc(100vw - 32px);
+    height:520px; max-height:calc(100vh - 130px);
+    background:rgba(255,249,245,.97);
+    backdrop-filter:blur(20px);
+    border-radius:24px;
+    box-shadow:0 20px 60px rgba(74,55,40,.22);
+    border:1px solid rgba(255,158,181,.4);
+    display:flex; flex-direction:column;
+    z-index:8999;
+    transform:scale(.85) translateY(20px);
+    opacity:0; pointer-events:none;
+    transition:all .35s cubic-bezier(.34,1.56,.64,1);
+    overflow:hidden;
+}
+.chat-window.open { transform:scale(1) translateY(0); opacity:1; pointer-events:all; }
+.chat-header {
+    background:linear-gradient(135deg,#4A3728,#3D2914);
+    color:white; padding:1rem 1.2rem;
+    display:flex; align-items:center; gap:.8rem;
+    border-radius:24px 24px 0 0; flex-shrink:0;
+}
+.chat-avatar { width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,158,181,.6); flex-shrink:0; }
+.chat-header-info h4 { font-family:'Fredoka One',cursive; font-size:1rem; margin:0; }
+.chat-header-info p { font-size:.72rem; opacity:.75; margin:0; }
+.chat-status-dot { width:8px; height:8px; background:#2ed573; border-radius:50%; display:inline-block; margin-right:4px; animation:blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+.chat-close-btn { margin-left:auto; background:rgba(255,255,255,.15); border:none; color:white; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:.9rem; display:flex; align-items:center; justify-content:center; }
+.chat-messages { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:.7rem; scroll-behavior:smooth; }
+.chat-messages::-webkit-scrollbar { width:4px; }
+.chat-messages::-webkit-scrollbar-thumb { background:rgba(255,158,181,.4); border-radius:4px; }
+.chat-msg { max-width:82%; padding:.65rem .9rem; border-radius:18px; font-size:.88rem; font-weight:600; line-height:1.5; font-family:'Quicksand',sans-serif; word-break:break-word; }
+.chat-msg.bot { background:rgba(255,255,255,.85); border:1px solid rgba(255,158,181,.3); border-bottom-left-radius:6px; align-self:flex-start; color:#4A3728; }
+.chat-msg.user { background:linear-gradient(135deg,#4A3728,#3D2914); color:white; border-bottom-right-radius:6px; align-self:flex-end; }
+.chat-msg.typing { background:rgba(255,255,255,.85); border:1px solid rgba(255,158,181,.3); align-self:flex-start; padding:.8rem 1.2rem; }
+.typing-dots { display:flex; gap:4px; align-items:center; }
+.typing-dots span { width:7px; height:7px; background:#FF9EB5; border-radius:50%; animation:typingBounce 1.2s infinite; }
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+.chat-quick-replies { display:flex; flex-wrap:wrap; gap:.4rem; padding:0 1rem .5rem; flex-shrink:0; }
+.quick-reply-btn { background:rgba(255,158,181,.15); border:1px solid rgba(255,158,181,.4); border-radius:20px; padding:.35rem .75rem; font-size:.78rem; font-weight:700; font-family:'Quicksand',sans-serif; color:#4A3728; cursor:pointer; transition:all .2s; white-space:nowrap; }
+.quick-reply-btn:hover { background:rgba(255,107,157,.2); }
+.chat-input-row { display:flex; gap:.5rem; padding:.8rem; border-top:1px solid rgba(255,158,181,.25); flex-shrink:0; }
+.chat-input { flex:1; padding:.65rem 1rem; border:2px solid rgba(255,158,181,.3); border-radius:20px; font-family:'Quicksand',sans-serif; font-size:.88rem; font-weight:600; color:#4A3728; background:rgba(255,255,255,.8); outline:none; transition:border-color .2s; }
+.chat-input:focus { border-color:#FF6B9D; }
+.chat-send-btn { width:40px; height:40px; background:linear-gradient(135deg,#FF6B9D,#FF9EB5); border:none; border-radius:50%; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.9rem; transition:all .2s; flex-shrink:0; }
+.chat-send-btn:hover { transform:scale(1.1); }
+.chat-send-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+</style>
+
 </head>
 <body>
     <!-- Floating Payment Button -->
@@ -3109,6 +3469,7 @@
     </section>
 
     <!-- How to Order Section -->
+    <div class="catalog-glass-wrap">
     <section class="how-to-order" id="como-ordenar">
         <h2>How to Order</h2>
         <div class="steps-grid">
@@ -3137,6 +3498,7 @@
     </section>
 
     <!-- Catalog Section -->
+    <div class="catalog-wrapper">
     <section class="catalog" id="catalogo">
         <div class="section-header">
             <h2 class="section-title">Our Catalog</h2>
@@ -5003,7 +5365,11 @@
                 </div></div>
     </section>
 
+    </div><!-- /catalog-wrapper -->
+
     <!-- Flavor Lab Banner Invitation -->
+    </div><!-- end catalog-glass-wrap -->
+
     <section class="flavor-lab-banner">
         <div class="flavor-lab-banner-content">
             <div class="flavor-lab-banner-icon">🧪</div>
@@ -5160,6 +5526,7 @@
     </section>
 
     <!-- Flavor Lab Wizard Section -->
+    <div class="flavor-lab-glass-wrap">
     <section class="flavor-lab" id="flavor-lab">
         <h2>Create Your Perfect Dessert</h2>
         <p class="section-subtitle">Follow the steps to customize your order exactly how you imagine it</p>
@@ -5380,9 +5747,11 @@
     </section>
 
     <!-- Footer -->
+    </div><!-- end flavor-lab-glass-wrap -->
+
     <footer>
         <div class="footer-content">
-            <img src="images/logo.png" alt="Sweets by Dulce Logo" class="footer-logo" onerror="this.src='data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2280%22&gt;🎂&lt;/text&gt;&lt;/svg&gt;'">
+            <img src="images/logo.png" alt="Sweets by Dulce" class="footer-logo" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🎂</text></svg>'">
             <h3 class="footer-title">Sweets by Dulce</h3>
             <p class="footer-tagline">Handcrafted with love in New York</p>
             <div class="footer-social">
@@ -6471,6 +6840,12 @@
             document.getElementById("modalTitle").textContent = product.title;
             document.getElementById("modalDescription").textContent = product.description;
             document.getElementById("productModal").classList.add("active");
+            // Track product view for analytics
+            try {
+                const visits = JSON.parse(localStorage.getItem('sbd_visits') || '{}');
+                visits[product.id] = (visits[product.id] || 0) + 1;
+                localStorage.setItem('sbd_visits', JSON.stringify(visits));
+            } catch(e) {}
         }
 
         // Open modal for customization - linked to interactive flavor buttons
@@ -6993,7 +7368,257 @@
             });
         });
     </script>
-    
+
+<script>
+/* ══ SBD Analytics + AI smart badges ══ */
+const SBD_Analytics = {
+    track(event, data) {
+        try {
+            const log = JSON.parse(localStorage.getItem('sbd_analytics')||'[]');
+            log.push({event, data, ts: Date.now()});
+            if(log.length > 1000) log.splice(0, log.length - 1000);
+            localStorage.setItem('sbd_analytics', JSON.stringify(log));
+        } catch(e) {}
+    },
+    getProductViews() {
+        try {
+            const log = JSON.parse(localStorage.getItem('sbd_analytics')||'[]');
+            const ct = {};
+            log.filter(e=>e.event==='product_view').forEach(e=>{
+                const id = e.data && e.data.id;
+                if(id) ct[id] = (ct[id]||0)+1;
+            });
+            return ct;
+        } catch(e) { return {}; }
+    },
+    getTopProducts(n) {
+        n = n||5;
+        const views = this.getProductViews();
+        return Object.entries(views).sort((a,b)=>b[1]-a[1]).slice(0,n).map(function(pair){return {id:parseInt(pair[0]),views:pair[1]};});
+    }
+};
+SBD_Analytics.track('pageview', {url: location.pathname});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Wrap openModal for tracking
+    var _origOpen = window.openModal;
+    if (typeof _origOpen === 'function') {
+        window.openModal = function(product) {
+            SBD_Analytics.track('product_view', {id: product.id, title: product.title, category: product.category});
+            _origOpen(product);
+        };
+    }
+    // AI badge: mark trending after 600ms
+    setTimeout(function() {
+        try {
+            var top = SBD_Analytics.getTopProducts(5);
+            var topIds = {};
+            top.forEach(function(p){ topIds[p.id] = true; });
+            document.querySelectorAll('.product-card').forEach(function(card) {
+                var btn = card.querySelector('[onclick*="openModalForCustomize"]');
+                if(!btn) return;
+                var m = btn.getAttribute('onclick').match(/\d+/);
+                if(!m) return;
+                var pid = parseInt(m[0]);
+                if(topIds[pid]) {
+                    var imgC = card.querySelector('.product-image-container');
+                    if(imgC && !imgC.querySelector('.badge-trending')) {
+                        var badge = document.createElement('span');
+                        badge.className='product-badge badge-best-seller badge-trending';
+                        badge.textContent='🔥 Trending';
+                        imgC.appendChild(badge);
+                    }
+                }
+            });
+        } catch(e) {}
+    }, 600);
+});
+// Track WhatsApp clicks
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.product-whatsapp-btn, .modal-btn');
+    if(btn) SBD_Analytics.track('whatsapp_click', {btn: btn.className});
+});
+window.SBD_Analytics = SBD_Analytics;
+</script>
+
+    <!-- ═══════════════════════════════
+         GROQ AI CHATBOT
+    ═══════════════════════════════ -->
+    <button id="chatbotBtn" onclick="toggleChat()" title="Chat with us!">
+        🎂
+        <span class="chat-notif">1</span>
+    </button>
+
+    <div id="chatWindow">
+        <div class="chat-header">
+            <img src="images/logo.png" class="chat-header-logo" onerror="this.style.display='none'" alt="Sweets by Dulce">
+            <div class="chat-header-info">
+                <div class="chat-header-name">Dulce&#39;s Assistant 🎂</div>
+                <div class="chat-header-status">
+                    <span class="status-dot"></span>
+                    Online &middot; Powered by AI
+                </div>
+            </div>
+            <button class="chat-close-btn" onclick="toggleChat()">&#10005;</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-quick-btns" id="quickBtns">
+            <button class="quick-btn" onclick="sendQuick('What cakes do you have?')">&#127874; Cakes</button>
+            <button class="quick-btn" onclick="sendQuick('What are your prices?')">&#128176; Prices</button>
+            <button class="quick-btn" onclick="sendQuick('How do I order?')">&#128230; Order</button>
+            <button class="quick-btn" onclick="sendQuick('What is your WhatsApp number?')">&#128241; Contact</button>
+            <button class="quick-btn" onclick="sendQuick('Recommend a cake for a birthday')">&#10024; Recommend</button>
+        </div>
+        <div class="chat-input-row">
+            <input id="chatInput" placeholder="Ask me anything..." onkeydown="if(event.key==='Enter')sendChat()">
+            <button id="chatSendBtn" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+    // ═══════════════════════════════════════════
+    // GROQ AI CHATBOT
+    // ═══════════════════════════════════════════
+    const GROQ_API_KEY = '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';
+    const GROQ_CHAT_MODEL = 'llama3-8b-8192';
+    let chatHistory = [];
+    let chatOpen = false;
+    let isTyping = false;
+
+    const SYSTEM_PROMPT = `You are Dulce's friendly AI assistant for "Sweets by Dulce", a custom cake and dessert shop in New York.
+
+BUSINESS INFO:
+- Name: Sweets by Dulce
+- Specialty: Handcrafted custom cakes, cupcakes, cakesicles, pies, specialty desserts
+- WhatsApp: +1 (631) 305-0544
+- Instagram: @sweets.bydulce
+- Facebook: Sweets by Dulce
+- TikTok: @sweetsbydulce
+- Location: New York area, local delivery available (fees may apply)
+
+PRICING GUIDE:
+- Custom Birthday Cakes — starting at $65
+- Cupcakes — starting at $35/dozen
+- Cakesicles & Specialty Desserts — starting at $45
+- Holiday & Special Event Cakes — starting at $75
+- Pies & Tarts — starting at $40
+- Wedding/Anniversary Cakes — quote by order
+
+HOW TO ORDER: 1) Browse catalog 2) Customize 3) WhatsApp: +1 (631) 305-0544
+
+CAKE FLAVORS: Vanilla, Chocolate, Red Velvet, Lemon, Carrot, Chocolate Chip
+FILLINGS: Nutella, Dulce de Leche, Cream Cheese, Buttercream, Ganache, Fruit Filling
+
+PERSONALITY: Be warm, sweet and enthusiastic. Use cake/sweet emojis occasionally. Keep responses concise. Always point to WhatsApp for orders. Respond in the SAME language the user writes (Spanish or English).`;
+
+    function toggleChat() {
+        chatOpen = !chatOpen;
+        const win = document.getElementById('chatWindow');
+        const btn = document.getElementById('chatbotBtn');
+        if (chatOpen) {
+            win.style.display = 'flex';
+            setTimeout(() => win.classList.add('open'), 10);
+            btn.querySelector('.chat-notif').style.display = 'none';
+            if (chatHistory.length === 0) {
+                setTimeout(() => addBotMessage("Hi! I'm Dulce's assistant 🎂 I can help you choose the perfect dessert, answer questions about our catalog, pricing, or how to order. What can I do for you today?"), 300);
+            }
+        } else {
+            win.classList.remove('open');
+            setTimeout(() => { win.style.display = 'none'; }, 300);
+        }
+    }
+
+    function addBotMessage(text) {
+        const msgs = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = 'chat-msg bot';
+        div.innerHTML = text.replace(/\n/g, '<br>');
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function addUserMessage(text) {
+        const msgs = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = 'chat-msg user';
+        div.textContent = text;
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function showTyping() {
+        const msgs = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = 'chat-msg typing';
+        div.id = 'typingIndicator';
+        div.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function removeTyping() {
+        const t = document.getElementById('typingIndicator');
+        if (t) t.remove();
+    }
+
+    async function sendChat() {
+        if (isTyping) return;
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        document.getElementById('quickBtns').style.display = 'none';
+        await sendMessage(text);
+    }
+
+    function sendQuick(text) {
+        document.getElementById('quickBtns').style.display = 'none';
+        sendMessage(text);
+    }
+
+    async function sendMessage(text) {
+        if (isTyping) return;
+        isTyping = true;
+        addUserMessage(text);
+        chatHistory.push({ role: 'user', content: text });
+        showTyping();
+
+        try {
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + GROQ_API_KEY
+                },
+                body: JSON.stringify({
+                    model: GROQ_CHAT_MODEL,
+                    messages: [
+                        { role: 'system', content: SYSTEM_PROMPT },
+                        ...chatHistory.slice(-8)
+                    ],
+                    max_tokens: 350,
+                    temperature: 0.7
+                })
+            });
+
+            const data = await response.json();
+            removeTyping();
+
+            if (data.choices && data.choices[0]) {
+                const reply = data.choices[0].message.content;
+                chatHistory.push({ role: 'assistant', content: reply });
+                addBotMessage(reply);
+            } else {
+                addBotMessage("I had a small hiccup! Please try again or reach us on WhatsApp: +1 (631) 305-0544 😅");
+            }
+        } catch(err) {
+            removeTyping();
+            addBotMessage("Sorry, connection issue! Contact us directly: WhatsApp +1 (631) 305-0544 or Instagram @sweets.bydulce 🙏");
+        }
+        isTyping = false;
+    }
+    </script>
+
     <!-- CSS to Force Hide MiniMax Banner -->
     <style>
         /* =========================================
@@ -7141,9 +7766,6 @@
                 height: 0 !important;
                 overflow: hidden !important;
             }
-            
-            /* Remove any bottom padding/margin caused by watermark */
-            body::after {
-                content: '';
-                display: block;
-                position: 
+        </style>
+</body>
+</html>
