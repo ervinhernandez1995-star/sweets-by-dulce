@@ -3284,7 +3284,8 @@
             justify-content: center;
             border: 2px solid white;
             pointer-events: none;
-        }       #chatWindow.open {
+        }
+        #chatWindow.open {
             display: flex;
             transform: translateY(0);
             opacity: 1;
@@ -6709,25 +6710,61 @@
         // Category label map
         const ADMIN_CAT_LABELS = {cakes:'Cakes',cupcakes:'Cupcakes',specialty:'Specialty',holiday:'Special Dates',pies:'Pies & Tarts',drinks:'Drinks'};
 
-        // Merge with admin-added products from localStorage
-        try {
-            const deletedIds = new Set(JSON.parse(localStorage.getItem('sbd_deleted') || '[]'));
-            // Remove deleted base products
-            for (let i = products.length - 1; i >= 0; i--) {
-                if (deletedIds.has(products[i].id)) products.splice(i, 1);
+        // Merge with admin-added products from localStorage + products-override.json
+        function resolveAdminImg(img) {
+            if (img && img.startsWith('__local:')) {
+                const key = img.replace('__local:', '');
+                return localStorage.getItem(key) || 'images/placeholder.jpg';
             }
-            const adminProducts = JSON.parse(localStorage.getItem('sbd_products') || '[]');
-            adminProducts.forEach(ap => {
-                if (deletedIds.has(ap.id)) return;
-                if (!ap.categoryLabel && ap.category) ap.categoryLabel = ADMIN_CAT_LABELS[ap.category] || ap.category;
-                const existing = products.find(p => p.id === ap.id);
-                if (existing) {
-                    Object.assign(existing, ap);
-                } else {
-                    products.push(ap);
+            return img;
+        }
+        function applyAdminProducts(adminProducts) {
+            try {
+                const deletedIds = new Set(JSON.parse(localStorage.getItem('sbd_deleted') || '[]'));
+                for (let i = products.length - 1; i >= 0; i--) {
+                    if (deletedIds.has(products[i].id)) products.splice(i, 1);
                 }
-            });
+                adminProducts.forEach(ap => {
+                    if (deletedIds.has(ap.id)) return;
+                    if (ap.image) ap.image = resolveAdminImg(ap.image);
+                    if (!ap.categoryLabel && ap.category) ap.categoryLabel = ADMIN_CAT_LABELS[ap.category] || ap.category;
+                    const existing = products.find(p => p.id === ap.id);
+                    if (existing) { Object.assign(existing, ap); } else { products.push(ap); }
+                });
+            } catch(e) { console.warn('applyAdminProducts error', e); }
+        }
+        try {
+            const localProducts = JSON.parse(localStorage.getItem('sbd_products') || '[]');
+            applyAdminProducts(localProducts);
         } catch(e) { console.warn('Could not load admin products', e); }
+        // Also try to load products-override.json (survives deploys)
+        fetch('/products-override.json?v=' + Date.now(), {cache:'no-store'})
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (!data) return;
+                const overrideProducts = data.products || data;
+                if (!Array.isArray(overrideProducts)) return;
+                // Merge override into localStorage for next time
+                const existing = JSON.parse(localStorage.getItem('sbd_products') || '[]');
+                const existingIds = new Set(existing.map(p=>p.id));
+                overrideProducts.forEach(p => {
+                    if (!existingIds.has(p.id)) existing.push({...p, _custom:true});
+                });
+                try { localStorage.setItem('sbd_products', JSON.stringify(existing)); } catch(e) {}
+                // Re-apply to live catalog
+                applyAdminProducts(overrideProducts);
+                if (typeof renderProducts === 'function') {
+                    const query = document.getElementById('searchInput');
+                    const q = query ? query.value : '';
+                    const active = document.querySelector('.filter-btn.active');
+                    const filter = active ? active.dataset.filter : 'all';
+                    let filtered = products;
+                    if (q) filtered = filtered.filter(p => p.title.toLowerCase().includes(q.toLowerCase()));
+                    if (filter && filter !== 'all') filtered = filtered.filter(p => p.category === filter);
+                    renderProducts(filtered);
+                }
+            })
+            .catch(() => {}); // Silently ignore if file doesn't exist
 
         // Initialize global floating icons
         function initFloatingIcons() {

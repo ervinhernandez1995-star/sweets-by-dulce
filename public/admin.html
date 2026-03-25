@@ -224,7 +224,31 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
         <div class="sc"><div class="sn" id="sC">—</div><div class="sl">Added by You</div></div>
         <div class="sc"><div class="sn" id="sV">—</div><div class="sl">Product Views</div></div>
       </div>
-      <div class="cc">
+      
+      <div class="cc" id="persistCard">
+        <div class="ct">💾 Data Persistence <span class="aitag">Survive Deploys</span></div>
+        <p style="font-size:.84rem;font-weight:600;opacity:.75;margin-bottom:.9rem">
+          Products only in localStorage are <strong>wiped on new deploys</strong>. 
+          Back up your catalog as JSON and re-import it after each deploy — or include <code style="background:rgba(255,158,181,.2);padding:.1rem .4rem;border-radius:5px">products-override.json</code> in your repo.
+        </p>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="aib" onclick="exportData()">
+            <i class="fas fa-download"></i> Export catalog JSON
+          </button>
+          <button class="aib" style="background:linear-gradient(135deg,#2E7D62,#43AA8B)" onclick="document.getElementById('importFile').click()">
+            <i class="fas fa-upload"></i> Import catalog JSON
+          </button>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+          <button class="aib" style="background:linear-gradient(135deg,#666,#888)" onclick="clearImgCache()">
+            <i class="fas fa-broom"></i> Free up storage
+          </button>
+        </div>
+        <div id="persistMsg" style="margin-top:.7rem;font-size:.83rem;font-weight:600;display:none"></div>
+        <div style="margin-top:.8rem;padding:.7rem 1rem;background:rgba(255,158,181,.1);border-radius:12px;font-size:.8rem;font-weight:600;line-height:1.6;opacity:.85">
+          💡 <strong>Tip:</strong> After adding products, click <em>Export</em>, rename the file to <code>products-override.json</code>, place it in <code>public/</code>, and push to GitHub. The site will auto-load it on every deploy.
+        </div>
+      </div>
+<div class="cc">
         <div class="ct">🔥 Most Viewed Products</div>
         <div class="mb" id="topC"><p style="opacity:.5;font-size:.83rem">Visit the main site to start tracking views!</p></div>
       </div>
@@ -252,7 +276,7 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
                ondrop="onDrop(event)">
             <input type="file" id="fi2" accept="image/*" onchange="onFile(event)">
             <div class="di">🖼️</div>
-            <div class="dt">Drag photo here or tap to browse<br><small style="opacity:.6">JPG, PNG, WEBP — max 5MB</small></div>
+            <div class="dt">Drag photo here or tap to browse<br><small style="opacity:.6">💡 Tip: For best results paste an image URL below instead of uploading. Uploaded photos use limited browser storage (max ~2 products).</small></div>
             <img id="dp2" class="dp" src="" alt="Preview">
           </div>
           <div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">
@@ -504,8 +528,58 @@ if(sessionStorage.getItem('adm')==='1'){
 }
 
 // ── DATA ──
-function getC(){try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch{return[];}}
-function setC(a){localStorage.setItem(SK,JSON.stringify(a));}
+function getC(){
+  try {
+    const raw = JSON.parse(localStorage.getItem(SK)||'[]');
+    return raw.map(p => ({...p, image: resolveImg(p.image)}));
+  } catch(e){ return []; }
+}
+function setC(a){
+  // Strip base64 data URIs before storing - they blow localStorage quota fast
+  // Only keep image URLs/filenames, not raw base64
+  const stripped = a.map(p => {
+    if (p.image && p.image.startsWith('data:')) {
+      // Save the b64 separately under its own key if small enough
+      const imgKey = 'sbd_img_' + p.id;
+      try {
+        localStorage.setItem(imgKey, p.image);
+        return {...p, image: '__local:' + imgKey};
+      } catch(e) {
+        // Image too big for localStorage, store as placeholder
+        return {...p, image: 'images/placeholder.jpg', _imgTooBig: true};
+      }
+    }
+    return p;
+  });
+  try {
+    localStorage.setItem(SK, JSON.stringify(stripped));
+  } catch(e) {
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      // Try removing oldest items to make room
+      const existing = getC();
+      if (existing.length > 0) {
+        // Emergency: clear old image keys
+        for(let i=0; i<localStorage.length; i++){
+          const k = localStorage.key(i);
+          if(k && k.startsWith('sbd_img_')) { localStorage.removeItem(k); i--; }
+        }
+        try { localStorage.setItem(SK, JSON.stringify(stripped)); return; } catch(e2){}
+      }
+      alert('⚠️ Storage is full! To save more products, use image URLs instead of uploading photos directly. Or go to Dashboard → Export to back up your data and clear storage.');
+    } else {
+      console.error('Save error:', e);
+      alert('Error saving: ' + e.message);
+    }
+  }
+}
+function resolveImg(img) {
+  // Resolve __local: references back to base64 at display time
+  if (img && img.startsWith('__local:')) {
+    const key = img.replace('__local:', '');
+    return localStorage.getItem(key) || 'images/placeholder.jpg';
+  }
+  return img;
+}
 function getDeleted(){try{return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
 function setDeleted(s){localStorage.setItem(DK,JSON.stringify([...s]));}
 function merged(){
@@ -523,7 +597,7 @@ function topP(n){
 function totV(){return getLog().filter(e=>e.event==='product_view').length;}
 
 // ── INIT ──
-function init(){upS();rdash();rl();}
+function init(){autoLoadOverride().then(()=>{upS();rdash();rl();});}
 
 function sw(t,el){
   document.querySelectorAll('.at button').forEach(b=>b.classList.remove('on'));
@@ -715,7 +789,7 @@ function saveProd(){
   if(!nm){toast('Enter a product name','er');return;}
   if(!cat){toast('Select a category','er');return;}
   const c=getC();
-  c.push({id:Date.now(),title:nm,description:document.getElementById('fD').value.trim(),category:cat,categoryLabel:CL[cat]||cat,price:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,badge:document.getElementById('fB').value||null,image:document.getElementById('fImg').value||document.getElementById('fI').value.trim()||FB,_custom:true,_added:Date.now()});
+  c.push({id:Date.now(),title:nm,description:document.getElementById('fD').value.trim(),category:cat,categoryLabel:CL[cat]||cat,price:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,badge:document.getElementById('fB').value||null,image:(document.getElementById('fI').value.trim()||document.getElementById('fImg').value||FB),_custom:true,_added:Date.now()});
   setC(c);
   ['fN','fD','fP','fI','fImg'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fC').value='';document.getElementById('fB').value='';
@@ -793,6 +867,126 @@ function delP(id){
   upS();rl();toast('🗑️ Deleted','ok');
 }
 document.getElementById('eOv').addEventListener('click',function(e){if(e.target===this)closeEdit();});
+
+
+// ══════════════════════════════════════════════════
+// PRIORITY 2: DATA PERSISTENCE — SURVIVE DEPLOYS
+// ══════════════════════════════════════════════════
+
+function exportData() {
+  const custom = getC();
+  if (!custom.length) { toast('No custom products to export','er'); return; }
+  // Resolve all images back to b64 for export
+  const exportData = custom.map(p => {
+    let img = p.image;
+    if (img && img.startsWith('__local:')) {
+      img = localStorage.getItem(img.replace('__local:','')) || p.image;
+    }
+    return {...p, image: img};
+  });
+  const blob = new Blob([JSON.stringify({
+    version: 2,
+    exported: new Date().toISOString(),
+    products: exportData
+  }, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'products-override.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  const msg = document.getElementById('persistMsg');
+  msg.style.display = 'block';
+  msg.innerHTML = '✅ Exported! Place <strong>products-override.json</strong> in your <code>public/</code> folder and push to GitHub to keep products after deploys.';
+  msg.style.color = '#2E7D62';
+  toast('✅ products-override.json downloaded!','ok');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const products = data.products || data; // support both formats
+      if (!Array.isArray(products)) throw new Error('Invalid format');
+      // Merge: imported products override existing ones by id
+      const existing = getC();
+      const existingIds = new Set(existing.map(p => p.id));
+      let added = 0, updated = 0;
+      products.forEach(p => {
+        const idx = existing.findIndex(x => x.id === p.id);
+        if (idx >= 0) { existing[idx] = {...p, _custom: true}; updated++; }
+        else { existing.push({...p, _custom: true}); added++; }
+      });
+      setC(existing);
+      upS(); rl();
+      const msg = document.getElementById('persistMsg');
+      msg.style.display = 'block';
+      msg.innerHTML = '✅ Imported: <strong>' + added + '</strong> new, <strong>' + updated + '</strong> updated';
+      msg.style.color = '#2E7D62';
+      toast('✅ Imported ' + (added+updated) + ' products!','ok');
+    } catch(err) {
+      toast('Import error: ' + err.message,'er');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function clearImgCache() {
+  let freed = 0;
+  const keys = [];
+  for(let i=0; i<localStorage.length; i++){
+    const k = localStorage.key(i);
+    if(k && k.startsWith('sbd_img_')) keys.push(k);
+  }
+  keys.forEach(k => { localStorage.removeItem(k); freed++; });
+  // Also update products to use placeholder for freed images
+  const prods = JSON.parse(localStorage.getItem(SK)||'[]');
+  prods.forEach(p => {
+    if(p.image && p.image.startsWith('__local:')) {
+      p.image = 'images/placeholder.jpg';
+    }
+  });
+  localStorage.setItem(SK, JSON.stringify(prods));
+  const msg = document.getElementById('persistMsg');
+  msg.style.display = 'block';
+  msg.innerHTML = '🧹 Freed ' + freed + ' cached images from storage. Products with uploaded photos now show placeholder until you re-upload or set an image URL.';
+  msg.style.color = '#7A5C00';
+  toast('🧹 Freed ' + freed + ' image caches','ok');
+}
+
+// Auto-load products-override.json on startup (for Vercel deploys)
+async function autoLoadOverride() {
+  try {
+    const r = await fetch('/products-override.json?v=' + Date.now(), {cache:'no-store'});
+    if (!r.ok) return; // File doesn't exist yet, that's fine
+    const data = await r.json();
+    const products = data.products || data;
+    if (!Array.isArray(products) || !products.length) return;
+    // Only load if localStorage is empty or override is newer
+    const existing = JSON.parse(localStorage.getItem(SK)||'[]');
+    const lastLoad = localStorage.getItem('sbd_override_loaded');
+    const overrideDate = data.exported || '0';
+    if (!existing.length || !lastLoad || overrideDate > lastLoad) {
+      // Merge override into localStorage
+      const existingIds = new Set(existing.map(p=>p.id));
+      let merged2 = [...existing];
+      products.forEach(p => {
+        const idx = merged2.findIndex(x=>x.id===p.id);
+        if(idx>=0) merged2[idx]={...p,_custom:true};
+        else merged2.push({...p,_custom:true});
+      });
+      localStorage.setItem(SK, JSON.stringify(merged2));
+      localStorage.setItem('sbd_override_loaded', overrideDate);
+      console.log('[SBD] Loaded', products.length, 'products from products-override.json');
+    }
+  } catch(e) {
+    // Silently ignore - file probably doesn't exist yet
+  }
+}
 
 // ── ADMIN GROQ CHAT ──
 const AC_PROMPT=`You are a smart admin assistant for Sweets by Dulce bakery. Help the admin manage their catalog, pricing, and business. You know about custom cakes, cupcakes, specialty desserts. Be concise and practical. Use emojis. For pricing, provide specific NY market rates.`;
