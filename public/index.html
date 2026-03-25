@@ -3465,6 +3465,7 @@
             <button class="filter-btn" data-filter="specialty">Specialty</button>
             <button class="filter-btn" data-filter="holiday">Holidays</button>
             <button class="filter-btn" data-filter="pies">Pies &amp; Tarts</button>
+            <button class="filter-btn" data-filter="drinks">Drinks</button>
         </div>
 
         <div class="product-grid" id="productGrid"><div class="product-card">
@@ -6590,13 +6591,22 @@
                 }
             ];
 
+        // Category label map
+        const ADMIN_CAT_LABELS = {cakes:'Cakes',cupcakes:'Cupcakes',specialty:'Specialty',holiday:'Special Dates',pies:'Pies & Tarts',drinks:'Drinks'};
+
         // Merge with admin-added products from localStorage
         try {
+            const deletedIds = new Set(JSON.parse(localStorage.getItem('sbd_deleted') || '[]'));
+            // Remove deleted base products
+            for (let i = products.length - 1; i >= 0; i--) {
+                if (deletedIds.has(products[i].id)) products.splice(i, 1);
+            }
             const adminProducts = JSON.parse(localStorage.getItem('sbd_products') || '[]');
             adminProducts.forEach(ap => {
+                if (deletedIds.has(ap.id)) return;
+                if (!ap.categoryLabel && ap.category) ap.categoryLabel = ADMIN_CAT_LABELS[ap.category] || ap.category;
                 const existing = products.find(p => p.id === ap.id);
                 if (existing) {
-                    // Update existing product with admin overrides
                     Object.assign(existing, ap);
                 } else {
                     products.push(ap);
@@ -7578,7 +7588,7 @@ window.SBD_Analytics = SBD_Analytics;
     // GROQ AI CHATBOT
     // ═══════════════════════════════════════════
     const GROQ_API_KEY = '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';
-    const GROQ_CHAT_MODEL = 'llama3-8b-8192';
+    const GROQ_CHAT_MODEL = 'llama-3.3-70b-versatile';
     let chatHistory = [];
     let chatOpen = false;
     let isTyping = false;

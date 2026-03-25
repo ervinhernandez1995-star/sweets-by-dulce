@@ -285,6 +285,7 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
               <option value="specialty">✨ Specialty</option>
               <option value="holiday">🎉 Special Dates</option>
               <option value="pies">🥧 Pies &amp; Tarts</option>
+              <option value="drinks">🥤 Drinks</option>
             </select>
           </div>
           <div class="fi">
@@ -316,6 +317,7 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
             <option value="specialty">Specialty</option>
             <option value="holiday">Holidays</option>
             <option value="pies">Pies &amp; Tarts</option>
+            <option value="drinks">Drinks</option>
           </select>
           <select class="fs" id="pSF" onchange="rl()">
             <option value="">All</option>
@@ -368,7 +370,7 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
         <select id="mC">
           <option value="cakes">🎂 Cakes</option><option value="cupcakes">🧁 Cupcakes</option>
           <option value="specialty">✨ Specialty</option><option value="holiday">🎉 Special Dates</option>
-          <option value="pies">🥧 Pies &amp; Tarts</option>
+          <option value="pies">🥧 Pies &amp; Tarts</option><option value="drinks">🥤 Drinks</option>
         </select>
       </div>
       <div class="fi">
@@ -415,10 +417,11 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
 // ── CONFIG ──
 const PASS='dulce2024';
 const SK='sbd_products';
+const DK='sbd_deleted';
 const AK='sbd_analytics';
 const GK='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';
-const GM='llama3-8b-8192';
-const CL={cakes:'Cakes',cupcakes:'Cupcakes',specialty:'Specialty',holiday:'Special Dates',pies:'Pies & Tarts'};
+const GM='llama-3.3-70b-versatile';
+const CL={cakes:'Cakes',cupcakes:'Cupcakes',specialty:'Specialty',holiday:'Special Dates',pies:'Pies & Tarts',drinks:'Drinks'};
 const FB="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>🧁</text></svg>";
 const PGS=18;
 let pg=1,eId=null,upB64=null,aiD=null,acOpen=false,acInit=false,matchData=[];
@@ -494,9 +497,12 @@ if(sessionStorage.getItem('adm')==='1'){
 // ── DATA ──
 function getC(){try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch{return[];}}
 function setC(a){localStorage.setItem(SK,JSON.stringify(a));}
+function getDeleted(){try{return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
+function setDeleted(s){localStorage.setItem(DK,JSON.stringify([...s]));}
 function merged(){
-  const c=getC();const r=BASE.map(p=>({...p}));
-  c.forEach(cp=>{const i=r.findIndex(p=>p.id===cp.id);if(i>=0)r[i]={...r[i],...cp,_ov:true};else r.push({...cp,_cu:true});});
+  const c=getC();const deleted=getDeleted();
+  const r=BASE.filter(p=>!deleted.has(p.id)).map(p=>({...p}));
+  c.forEach(cp=>{const i=r.findIndex(p=>p.id===cp.id);if(i>=0)r[i]={...r[i],...cp,_ov:true};else if(!deleted.has(cp.id))r.push({...cp,_cu:true});});
   return r;
 }
 function getLog(){try{return JSON.parse(localStorage.getItem(AK)||'[]');}catch{return[];}}
@@ -692,7 +698,7 @@ function rl(){
         (isC?'<span class="mk cu">✏️ Edited</span>':'')+
       '</div></div>'+
       '<div class="pb"><button class="ab2 ed" onclick="openEdit('+p.id+')" title="Edit"><i class="fas fa-pen"></i></button>'+
-      (isC?'<button class="ab2 dl" onclick="delP('+p.id+')" title="Delete"><i class="fas fa-trash"></i></button>':'')+
+      '<button class="ab2 dl" onclick="delP('+p.id+')" title="Delete"><i class="fas fa-trash"></i></button>'+
       '</div></div>';
   }).join('');
   rpg(pgs);
@@ -723,7 +729,15 @@ function saveEdit(){
   if(i>=0)c[i]=upd;else c.push(upd);
   setC(c);upS();rl();closeEdit();toast('✅ Updated!','ok');
 }
-function delP(id){if(!confirm('Delete this product?'))return;setC(getC().filter(p=>p.id!==id));upS();rl();toast('🗑️ Deleted','ok');}
+function delP(id){
+  if(!confirm('Delete this product?'))return;
+  // Remove from custom list if present
+  setC(getC().filter(p=>p.id!==id));
+  // Mark base product as deleted so it stays hidden
+  const isBase=BASE.some(p=>p.id===id);
+  if(isBase){const d=getDeleted();d.add(id);setDeleted(d);}
+  upS();rl();toast('🗑️ Deleted','ok');
+}
 document.getElementById('eOv').addEventListener('click',function(e){if(e.target===this)closeEdit();});
 
 // ── ADMIN GROQ CHAT ──
