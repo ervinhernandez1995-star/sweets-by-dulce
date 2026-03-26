@@ -6737,34 +6737,129 @@
             const localProducts = JSON.parse(localStorage.getItem('sbd_products') || '[]');
             applyAdminProducts(localProducts);
         } catch(e) { console.warn('Could not load admin products', e); }
-        // Also try to load products-override.json (survives deploys)
-        fetch('/products-override.json?v=' + Date.now(), {cache:'no-store'})
-            .then(r => r.ok ? r.json() : null)
-            .then(data => {
-                if (!data) return;
-                const overrideProducts = data.products || data;
-                if (!Array.isArray(overrideProducts)) return;
-                // Merge override into localStorage for next time
-                const existing = JSON.parse(localStorage.getItem('sbd_products') || '[]');
-                const existingIds = new Set(existing.map(p=>p.id));
-                overrideProducts.forEach(p => {
-                    if (!existingIds.has(p.id)) existing.push({...p, _custom:true});
-                });
-                try { localStorage.setItem('sbd_products', JSON.stringify(existing)); } catch(e) {}
-                // Re-apply to live catalog
-                applyAdminProducts(overrideProducts);
-                if (typeof renderProducts === 'function') {
-                    const query = document.getElementById('searchInput');
-                    const q = query ? query.value : '';
-                    const active = document.querySelector('.filter-btn.active');
-                    const filter = active ? active.dataset.filter : 'all';
-                    let filtered = products;
-                    if (q) filtered = filtered.filter(p => p.title.toLowerCase().includes(q.toLowerCase()));
-                    if (filter && filter !== 'all') filtered = filtered.filter(p => p.category === filter);
-                    renderProducts(filtered);
+        // ══════════════════════════════════════════════════
+        // SUPABASE INTEGRATION — Load products from cloud
+        // ══════════════════════════════════════════════════
+        const SUPABASE_URL = 'https://ybdybhrbtwuzninrgamv.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_T_ycHkSbs3MqiWlh6luhnw_aN2PtFeP';
+
+        function supaFetch(path, opts) {
+            return fetch(SUPABASE_URL + path, {
+                ...opts,
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': 'Bearer ' + SUPABASE_KEY,
+                    'Content-Type': 'application/json',
+                    ...(opts && opts.headers)
                 }
+            });
+        }
+
+        function mapSupabaseProduct(row) {
+            return {
+                id: row.id,
+                title: row.nombre,
+                description: row.descripcion || '',
+                category: row.categoria || 'specialty',
+                categoryLabel: ADMIN_CAT_LABELS[row.categoria] || row.categoria || 'Specialty',
+                price: row.precio || null,
+                image: row.imagen_url || '',
+                badge: row.badge || null,
+                _supabase: true
+            };
+        }
+
+        function refreshCatalog() {
+            const query = document.getElementById('searchInput');
+            const q = query ? query.value : '';
+            const active = document.querySelector('.filter-btn.active');
+            const filter = active ? active.dataset.filter : 'all';
+            let filtered = products;
+            if (q) filtered = filtered.filter(p => p.title.toLowerCase().includes(q.toLowerCase()));
+            if (filter && filter !== 'all') filtered = filtered.filter(p => p.category === filter);
+            if (typeof renderProducts === 'function') renderProducts(filtered);
+        }
+
+        // Load from Supabase on page load
+        supaFetch('/rest/v1/productos?select=*&order=id.asc')
+            .then(r => r.ok ? r.json() : null)
+            .then(rows => {
+                if (!rows || !rows.length) return;
+                rows.forEach(row => {
+                    const sp = mapSupabaseProduct(row);
+                    const existing = products.find(p => p.title === sp.title && !p._supabase);
+                    if (existing) {
+                        // Update existing static product with cloud data (price, image_url, etc.)
+                        if (sp.price) existing.price = sp.price;
+                        if (sp.image && sp.image.startsWith('http')) existing.image = sp.image;
+                        existing._supabaseId = row.id;
+                    } else {
+                        // New product added via admin — add to catalog
+                        const alreadyIn = products.find(p => p.id === sp.id);
+                        if (!alreadyIn) products.push(sp);
+                    }
+                });
+                refreshCatalog();
             })
-            .catch(() => {}); // Silently ignore if file doesn't exist
+            .catch(() => {}); // Silently fall back to static catalog
+
+        // ══════════════════════════════════════════════════
+        // SUPABASE REALTIME — Live updates without refresh
+        // ══════════════════════════════════════════════════
+        (function initRealtime() {
+            try {
+                const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
+                const ws = new WebSocket(wsUrl);
+                let heartbeat;
+
+                ws.onopen = () => {
+                    ws.send(JSON.stringify({
+                        topic: 'realtime:public:productos',
+                        event: 'phx_join',
+                        payload: {},
+                        ref: '1'
+                    }));
+                    heartbeat = setInterval(() => {
+                        ws.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: null }));
+                    }, 25000);
+                };
+
+                ws.onmessage = (e) => {
+                    try {
+                        const msg = JSON.parse(e.data);
+                        if (!msg.payload || !msg.payload.record) return;
+                        const row = msg.payload.record;
+                        const sp = mapSupabaseProduct(row);
+
+                        if (msg.event === 'INSERT') {
+                            const alreadyIn = products.find(p => p.id === sp.id);
+                            if (!alreadyIn) {
+                                products.push(sp);
+                                refreshCatalog();
+                            }
+                        } else if (msg.event === 'UPDATE') {
+                            const idx = products.findIndex(p => p.id === sp.id || p._supabaseId === sp.id);
+                            if (idx !== -1) {
+                                products[idx] = { ...products[idx], ...sp };
+                                refreshCatalog();
+                            }
+                        } else if (msg.event === 'DELETE') {
+                            const oldId = msg.payload.old_record && msg.payload.old_record.id;
+                            if (oldId) {
+                                const idx = products.findIndex(p => p.id === oldId || p._supabaseId === oldId);
+                                if (idx !== -1) {
+                                    products.splice(idx, 1);
+                                    refreshCatalog();
+                                }
+                            }
+                        }
+                    } catch(err) {}
+                };
+
+                ws.onerror = () => {};
+                ws.onclose = () => { clearInterval(heartbeat); };
+            } catch(e) {}
+        })();
 
         // Initialize global floating icons
         function initFloatingIcons() {

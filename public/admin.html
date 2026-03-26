@@ -242,10 +242,13 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
           <button class="aib" style="background:linear-gradient(135deg,#666,#888)" onclick="clearImgCache()">
             <i class="fas fa-broom"></i> Free up storage
           </button>
+          <button class="aib" id="migBtn" style="background:linear-gradient(135deg,#1a73e8,#0d47a1)" onclick="migrateCatalog()">
+            <i class="fas fa-cloud-upload-alt"></i> 📦 Migrate Catalog to Supabase
+          </button>
         </div>
         <div id="persistMsg" style="margin-top:.7rem;font-size:.83rem;font-weight:600;display:none"></div>
-        <div style="margin-top:.8rem;padding:.7rem 1rem;background:rgba(255,158,181,.1);border-radius:12px;font-size:.8rem;font-weight:600;line-height:1.6;opacity:.85">
-          💡 <strong>Tip:</strong> After adding products, click <em>Export</em>, rename the file to <code>products-override.json</code>, place it in <code>public/</code>, and push to GitHub. The site will auto-load it on every deploy.
+        <div style="margin-top:.8rem;padding:.7rem 1rem;background:rgba(26,115,232,.08);border:1px solid rgba(26,115,232,.2);border-radius:12px;font-size:.8rem;font-weight:600;line-height:1.6">
+          ☁️ <strong>Supabase Connected:</strong> New products you add are automatically saved to the cloud and appear instantly on all devices — no redeploy needed. Use <em>Migrate Catalog</em> once to upload the 97 base products to Supabase.
         </div>
       </div>
 <div class="cc">
@@ -413,19 +416,7 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
           <option value="limited">✨ Limited Edition</option><option value="new">🆕 New</option>
         </select>
       </div>
-      <div class="fi full">
-        <label>Photo — Upload or paste URL</label>
-        <div class="dz" id="mDz" style="padding:1rem"
-             ondragover="event.preventDefault();this.classList.add('over')"
-             ondragleave="this.classList.remove('over')"
-             ondrop="onModalDrop(event)">
-          <input type="file" id="mFileIn" accept="image/*" onchange="onModalFile(event)">
-          <div class="di" id="mDi" style="font-size:1.6rem;margin-bottom:.2rem">🖼️</div>
-          <div class="dt" id="mDt" style="font-size:.78rem">Drag photo here or tap to select</div>
-          <img id="mPrev" style="width:80px;height:80px;object-fit:cover;border-radius:10px;margin:.5rem auto 0;display:none;border:2px solid var(--pk)" src="" alt="Preview">
-        </div>
-        <input type="text" id="mI" placeholder="Or paste image URL: https://... or images/filename.jpg" style="margin-top:.5rem">
-      </div>
+      <div class="fi full"><label>Image URL / filename</label><input type="text" id="mI" placeholder="images/filename.jpg or https://..."></div>
     </div>
     <button class="sb" onclick="saveEdit()" style="margin-top:1rem"><i class="fas fa-check"></i> Save Changes</button>
   </div>
@@ -471,105 +462,108 @@ const FB="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 
 const PGS=18;
 let pg=1,eId=null,upB64=null,aiD=null,acOpen=false,acInit=false,matchData=[];
 
+// ── SUPABASE CONFIG ──
+const SB_URL='https://ybdybhrbtwuzninrgamv.supabase.co';
+const SB_KEY='sb_publishable_T_ycHkSbs3MqiWlh6luhnw_aN2PtFeP';
+const SB_BUCKET='fotos-productos';
+
+function sbFetch(path, opts){
+  return fetch(SB_URL+path,{...opts,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...(opts&&opts.headers)}});
+}
+
+async function sbUploadImage(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  const fname='producto-'+Date.now()+'.'+ext;
+  const res=await fetch(SB_URL+'/storage/v1/object/'+SB_BUCKET+'/'+fname,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true'},
+    body:file
+  });
+  if(!res.ok){const e=await res.text();throw new Error('Upload failed: '+e);}
+  return SB_URL+'/storage/v1/object/public/'+SB_BUCKET+'/'+fname;
+}
+
+async function sbSaveProduct(data){
+  // data: {nombre, descripcion, categoria, precio, imagen_url}
+  const res=await sbFetch('/rest/v1/productos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(data)});
+  if(!res.ok){const e=await res.text();throw new Error('DB error: '+e);}
+  return res.json();
+}
+
+async function sbUpdateProduct(id, data){
+  const res=await sbFetch('/rest/v1/productos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(data)});
+  if(!res.ok){const e=await res.text();throw new Error('Update error: '+e);}
+  return res.json();
+}
+
+async function sbDeleteProduct(id){
+  const res=await sbFetch('/rest/v1/productos?id=eq.'+id,{method:'DELETE'});
+  if(!res.ok){const e=await res.text();throw new Error('Delete error: '+e);}
+}
+
+async function sbLoadProducts(){
+  const res=await sbFetch('/rest/v1/productos?select=*&order=id.asc');
+  if(!res.ok)return [];
+  return res.json();
+}
+
+// ── MIGRATE CATALOG TO SUPABASE ──
+async function migrateCatalog(){
+  if(!confirm('This will upload all 97 catalog products to Supabase. Continue?'))return;
+  const btn=document.getElementById('migBtn');
+  btn.disabled=true;btn.textContent='⏳ Migrating...';
+  let ok=0,fail=0;
+  for(const p of BASE){
+    try{
+      await sbFetch('/rest/v1/productos',{method:'POST',headers:{'Prefer':'return=minimal'},
+        body:JSON.stringify({nombre:p.title,descripcion:p.description||'',categoria:p.category,precio:p.price||null,imagen_url:p.image||null})
+      });
+      ok++;
+    }catch(e){fail++;}
+  }
+  btn.disabled=false;btn.textContent='📦 Migrate Catalog';
+  toast('✅ Migrated: '+ok+' products'+(fail?' | ⚠️ '+fail+' failed':''),'ok');
+}
+
 // ── BASE CATALOG (subset for admin) ──
 const BASE=[
-{id:1,title:"Stitch and Angel Sofia Cake",description:"Birthday cake featuring Stitch and Angel characters. Number 7, name Sofia, decorative ice cream cone on top and pink hearts.",image:"images/cakesicle-unicornio-arcoiris.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:2,title:"Bluey Enzo 1st Birthday Cake",description:"Bluey birthday cake for Enzo's first birthday. Bluey and Bingo characters with Australian style house and number 1.",image:"images/cakesicle-flores.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:3,title:"Heart Cake 14 Years",description:"Heart-shaped cake decorated with red and pink hearts. Number 14 on top with golden pearls.",image:"images/cakesicle-dinosaurio.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:4,title:"Graduation Anna 2024 Cake",description:"Graduation cake CLASS OF 2024 ANNA. Graduation cap, stacked books, flowers and CONGRATS message.",image:"images/cakesicle-conejito.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:5,title:"Flan with Strawberries and Cream",description:"Flan decorated with fresh strawberries and whipped cream. Classic dessert with elegant decoration.",image:"images/cakesicle-cumpleaños.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:6,title:"Happy Valentine's Day Cake",description:"Cake decorated with Happy Valentine's Day message in black cursive. Red hearts decoration and white frosting.",image:"images/cakesicle-selva.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:7,title:"Halloween Pumpkin Cake",description:"Realistic pumpkin-shaped cake. Perfect autumn decoration for Halloween or Thanksgiving.",image:"images/cakesicle-princesa.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:8,title:"Heart Cake Brooke 14",description:"Heart-shaped birthday cake. Cakesicle toppers with number 14, Happy Birthday Brooke message and floral decorations.",image:"images/cakesicle-sirena.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:9,title:"Bento Cake Flork I Love U",description:"Small bento cake with Flork character holding I LOVE U sign. Red hearts decoration.",image:"images/cakesicle-panda.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:10,title:"Mother's Day Pink Flowers Cake",description:"Small cake decorated with pink buttercream roses in pastel tones. Heart-shaped Happy Mother's Day topper.",image:"images/cakesicle-frozen.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:11,title:"Kids and Grandparents Cake",description:"Birthday cake with image of three girls and message HAPPY BIRTHDAY GRANDPA. Elegant decoration with gold leaf.",image:"images/cakesicle-paw-patrol.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:12,title:"50th Anniversary Cake",description:"50th wedding anniversary cake. Vintage couple photo, golden roses and Happy 50 Anniversary message.",image:"images/cakesicle-stitch.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:13,title:"Grandparents Birthday Cake",description:"Birthday cake for grandpa with three girls. HAPPY BIRTHDAY GRANDPA message in golden letters and pearl decoration.",image:"images/cakesicle-minnie-mouse.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:14,title:"Blue Two-Tier Anastasia Cake",description:"Two-tier cake for Anastasia's 6th birthday. Mermaid theme with tail shaped as number 6, customized name and marine decorations.",image:"images/cakesicle-hello-kitty.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:15,title:"Red Hearts Cake",description:"Cake decorated with hearts and white frosting. Swirl texture and ribbon with BEST WISHES FOR YOU message.",image:"images/cakesicle-mickey-mouse.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:16,title:"Grandparents Birthday Cake",description:"Birthday cake for grandpa with three girls. HAPPY BIRTHDAY message and elegant flower decoration.",image:"images/cakesicle-spiderman.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:17,title:"50th Anniversary Cake",description:"Elegant 50th wedding anniversary cake. White coating, golden roses and Happy 50 Anniversary message.",image:"images/cakesicle-avengers.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:18,title:"Mermaid Ocean Cake",description:"First birthday cake with ocean/mermaid theme. Fish scales in turquoise and purple frosting, shell and sand.",image:"images/cakesicle-batman.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:19,title:"Welcome Las Vegas 70th Cake",description:"70th birthday cake with casino/Las Vegas theme. Welcome to Las Vegas, poker cards and casino chips.",image:"images/cakesicle-halloween.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:20,title:"Cushion Cake with Crown",description:"Debra's 55th birthday cushion-shaped cake. Golden crown, pearl tufted effect and queen theme.",image:"images/cakesicle-navidena-trineo.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:21,title:"Purple Heart Cake R.I.P 20's",description:"Small heart-shaped cake for transitioning from 20s to 30s. R.I.P 20's and hello 30 with black and purple colors.",image:"images/cakesicle-san-valentin.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:22,title:"Wedding Tuxedo Cakesicles Set",description:"Set of 12 wedding cakesicles. Initials S & J, white roses, and tuxedo design for bride and groom.",image:"images/cakesicle-boda-novios.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:23,title:"Unicorn Cake",description:"Classic unicorn cake with golden horn, ears and multicolored mane. Characteristic closed eyes and pastel colors.",image:"images/pastel-unicornio.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:24,title:"Giant Macaron Cake",description:"Sculpted cake shaped like a giant French macaron. Turquoise color with small macarons decorated with edible gold.",image:"images/pastel-sirena.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:25,title:"Santa Claus Cake",description:"Cake decorated as Santa Claus face. Textured red hat, white beard, mustache and golden glasses.",image:"images/pastel-princesa-disney.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:26,title:"Character with Sword Cake",description:"Pink cake with anime/video game character figure holding a sword. Character topper with yellow jacket and purple hair.",image:"images/pastel-hello-kitty-flores.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:27,title:"S & J Cakesicles and Cones Set",description:"Gift box with cakesicles and cake pops. Initials S & J, white roses, tuxedo design and decorated cones.",image:"images/pastel-paw-patrol-gigante.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:28,title:"Hot Chocolate Cup Cake",description:"Cake shaped like a hot chocolate cup. Marshmallows, melted chocolate, golden drips and candy stick as handles.",image:"images/pastel-minnie-mouse.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:29,title:"Cocomelon Cake",description:"Watermelon-shaped cake with Cocomelon face. Spinning banner with JJ, TomTom, YoYo characters and BIRTHDAY banner.",image:"images/pastel-cocomelon.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:30,title:"Mint Christmas Cake",description:"Small cake with striped candy canes. Vintage decoration with piping borders and golden pearls.",image:"images/pastel-hello-kitty-2.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:31,title:"Elegant Heart Cake",description:"Heart-shaped cake in dark red color. Vintage decoration with piping, golden pearls and Happy Birthday topper.",image:"images/pastel-spiderman.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:32,title:"Flork with Hearts Cake",description:"Small bento cake with Flork character holding heart-shaped balloons. For you message in red frosting.",image:"images/pastel-avengers.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:33,title:"Spiderman Cake",description:"Heart-shaped cake with Spiderman mask. Decorative webs, spiders and red and black colors.",image:"images/pastel-batman.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:34,title:"Construction Theme Cake",description:"Cake with Flork character dressed as constructor. Yellow helmet, hammer and message I love you my Bob the builder. Brick effect.",image:"images/pastel-dinosaurios.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:35,title:"PSG Soccer Cake",description:"Soccer cake with PSG-style jersey. Decorative balls, white to blue color transition and number 3.",image:"images/pastel-cars.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:36,title:"Soccer Ball Cake",description:"Cylindrical cake with soccer theme. Blue shirt with red stripe, balls and green grass-like border.",image:"images/pastel-toy-story.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:37,title:"Mother's Day Cakesicles",description:"Set of cakesicles for Mother's Day. Decorated with flowers, Happy Mother's Day message and wrapped in plastic with pink ribbon.",image:"images/pastel-peppa-pig.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:38,title:"Valentine's Day Bento Cakes",description:"Four Valentine's bento cakes with Flork characters. Hearts, I LOVE U, Happy Valentine's and long arms expressing love.",image:"images/pastel-deportivo.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:39,title:"MOM Cookies for Mom",description:"Heart-shaped cookies with MOM message. Black flowers, decorative lavender and design with initials in purple color.",image:"images/pastel-cumpleaños-clasico.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:40,title:"Elegant Rose Cones",description:"Cake pops shaped like ice cream cones. Gray coating, golden roses, white pearls and sophisticated elegant style.",image:"images/pastel-baby-shark.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:41,title:"Carrot Cake",description:"Two-tier naked carrot cake. Cream cheese frosting and decorative sugar carrots.",image:"images/pastel-mario-bros.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:42,title:"Pink Coquette Cake",description:"Heart-shaped cake in pastel pink color. Black ribbons, white pearls and Birthday Bitch message in cursive.",image:"images/pastel-sonic.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:43,title:"Elegant Coquette Cake",description:"Vintage heart-shaped cake. Black ribbons, white pearls and Birthday Bitch message. Modern coquette style.",image:"images/pastel-dragon-ball.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:44,title:"Elegant Floral Cupcakes",description:"Dozen cupcakes decorated as realistic flowers. Roses, hydrangeas, pastel color gradient and gold leaf.",image:"images/pastel-minecraft.jpg",category:"cupcakes",categoryLabel:"Cupcakes"},
-{id:45,title:"Fancy Nancy Cake",description:"Two-tier cake for Valentina. Giant number 3 tea cup, butterflies, flowers and Fancy Nancy character with friends.",image:"images/pastel-bob-constructor.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:46,title:"Western Cowboy Cake",description:"Cake with cowboy hat and boots. Braided rope texture, wood effect, golden sparkles and number TWO.",image:"images/pastel-vaquero-cowboy.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:47,title:"Classic Carrot Cake",description:"Naked carrot cake with cream cheese frosting. Fondant carrot decoration and visible filling between layers.",image:"images/pastel-zanahoria-carrots.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:48,title:"Graduation Cake",description:"Elegant graduation cake with graduation cap, diploma and congratulations message. Decorated with books and flowers.",image:"images/pastel-graduacion.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:49,title:"Rhythmic Gymnastics Cake",description:"Elegant rhythmic gymnastics cake with flower and ribbon details.",image:"images/pastel-gimnasia-ritmica-valentina.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:50,title:"Pink Heart Cake",description:"Heart-shaped cake in pastel pink color. Pearl border, number 14 and elegant feminine design.",image:"images/pastel-corazon-valentine.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:51,title:"Flower Garden Cake",description:"Cake decorated with flower garden on top. Elegant design with colorful flowers and decorative borders.",image:"images/pastel-calabaza-halloween.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:52,title:"Jack Skellington Cake",description:"Skeletal cake Nightmare Before Christmas style. Terrifyingly elegant.",image:"images/pastel-jack-skellington.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:53,title:"Whiskey Barrel Cake",description:"Sophisticated cake shaped like whiskey barrel with keys and wood details.",image:"images/pastel-barrica-whiskey.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:54,title:"Oreo Cake",description:"Delicious cake with Oreo cookies, cream frosting and colorful decoration.",image:"images/pastel-oreo-cumpleaños.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:55,title:"Gingerbread Cookie Face Cake",description:"Cake decorated with Gingerbread cookie figure with smiling face. Ginger texture and icing frosting.",image:"images/pastel-princesa-fancy-nancy.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:56,title:"PSG Soccer Cake",description:"Cake with PSG team decoration. Blue, red and white colors with soccer elements.",image:"images/pastel-chocolate-fresas.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:57,title:"Heart-Shaped Decorated Pops",description:"Elegant Magnum-style cake pops shaped like hearts. Chocolate coating with festive decoration.",image:"images/corazon-chocolate.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:58,title:"Chocolate Rose Bouquet",description:"Elegant bouquet of roses made entirely of chocolate in various shades.",image:"images/ramos-rosas-chocolate.jpg",category:"specialty",categoryLabel:"Chocolate"},
-{id:59,title:"Western Cowboy Cake",description:"Cowboy cakes with sombrero and boots. Braided rope texture, wood effect, golden sparkles and number TWO.",image:"images/barco-chocolate.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:60,title:"Flork Constructor Cake",description:"Cake with Flork character dressed as constructor. Yellow helmet, hammer and message I love you my Bob the builder. Brick effect.",image:"images/corona-chocolate.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:61,title:"Cupcakes with White Flowers",description:"Dozen cupcakes decorated with elegant white buttercream flowers. Sophisticated and clean finish.",image:"images/tambor-chocolate.jpg",category:"cupcakes",categoryLabel:"Cupcakes"},
-{id:62,title:"Chocolate Chip Cookies",description:"Classic butter cookies with chocolate chips. Soft texture inside and slightly crispy outside.",image:"images/laptop-chocolate.jpg",category:"specialty",categoryLabel:"Cookies"},
-{id:63,title:"Watermelon Ornament One in a Melon",description:"Creative cut watermelon ornament with One in a Melon message. Edible cake decoration.",image:"images/guitarra-chocolate.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:64,title:"Pink and Orange Flower Cupcakes",description:"Cute cupcakes decorated with buttercream flowers in pink and orange tones. Delicate and colorful design.",image:"images/secadora-chocolate.jpg",category:"cupcakes",categoryLabel:"Cupcakes"},
-{id:65,title:"Flork Cookies",description:"Fun cookies decorated with Flork characters. Vibrant colors and customized designs.",image:"images/helado-chocolate.jpg",category:"specialty",categoryLabel:"Cookies"},
-{id:66,title:"Letters and Numbers Flowers Cake",description:"Cake decorated with personalized letters and numbers surrounded by flowers. Elegant design for celebrations.",image:"images/caja-bombones.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:67,title:"Watermelon Decorated Cookies",description:"Watermelon-shaped cookies decorated with colorful icing. Fun and refreshing design.",image:"images/figuras-chocolate-personalizadas.jpg",category:"specialty",categoryLabel:"Cookies"},
-{id:68,title:"Strawberries with Chocolate and Flowers",description:"Exquisite chocolate-covered strawberries decorated with elaborate flowers.",image:"images/fresas-chocolate-flores.jpg",category:"specialty",categoryLabel:"Chocolate"},
-{id:69,title:"Oreo Chocolate Drip Cake",description:"Individual cake decorated as Oreo cookie with chocolate drip. Cookie base and vanilla cream coating.",image:"images/cupcakes-unicornio.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:70,title:"Individual Oreo Cake",description:"Small individual cake with Oreo cookie decoration. Perfect size for personal serving.",image:"images/cupcakes-cumpleaños.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:71,title:"Two-Tier Pink Blue Cake",description:"Elegant two-tier cake in pink and blue tones with decorative ruffles. Sophisticated design for special celebrations.",image:"images/cupcakes-san-valentin.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:72,title:"Berry Cake",description:"Elegant semi-naked cake decorated with strawberries, blueberries and blackberries. Creamy texture with fresh fruits.",image:"images/cupcakes-baby-shower.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:73,title:"Flork Hearts Cake",description:"Small bento cake with Flork character holding heart-shaped balloons. For you message in red frosting.",image:"images/cupcakes-boda.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:74,title:"Graduation Cupcakes",description:"Celebratory graduation cupcakes with graduation caps and diplomas.",image:"images/cupcakes-graduacion.jpg",category:"cupcakes",categoryLabel:"Cupcakes"},
-{id:75,title:"Halloween Cupcakes",description:"Spooky Halloween cupcakes with spiders, ghosts and pumpkins.",image:"images/cupcakes-halloween.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:76,title:"Santa Christmas Cupcakes",description:"Magical Christmas cupcakes with Santa Claus, trees and snowflakes.",image:"images/cupcakes-navidenos-santa.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:77,title:"Pecan Pie",description:"Delicious pecan pie with creamy filling and powdered sugar coating. Smooth texture and comforting flavor.",image:"images/cupcakes-dia-madre.jpg",category:"pies",categoryLabel:"Pies & Tarts"},
-{id:78,title:"Decorated Cookies Number 15",description:"Elegant cookies decorated with number 15. Perfect for quinceañera celebrations.",image:"images/cupcakes-pascua.jpg",category:"specialty",categoryLabel:"Cookies"},
-{id:79,title:"Elegant Floral Cupcakes",description:"Sophisticated cupcakes decorated with realistic buttercream flowers.",image:"images/cupcakes-florales-elegantes.jpg",category:"cupcakes",categoryLabel:"Cupcakes"},
-{id:80,title:"Watermelon Cupcakes 1st Birthday",description:"Fun watermelon-themed cupcakes for first birthday.",image:"images/cupcakes-sandia-1er-año.jpg",category:"cupcakes",categoryLabel:"Cupcakes"},
-{id:81,title:"Highland Cows Cupcakes",description:"Adorable cupcakes with long-haired Highland cow design.",image:"images/cupcakes-vacas-highland.jpg",category:"cupcakes",categoryLabel:"Cupcakes"},
-{id:82,title:"Christmas Cupcakes",description:"Festive Christmas cupcakes with Christmas decorations: trees and reindeer.",image:"images/cupcakes-navidad.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:83,title:"Cake Pops Transparent Sphere",description:"Elegant cake pops shaped like transparent sphere with visible filling. Sophisticated and unique decoration.",image:"images/galletas-boda.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:84,title:"Dozen Pink Floral Cupcakes",description:"Dozen cupcakes decorated with elegant buttercream flowers in pink tones. Sophisticated and delicate finish.",image:"images/galletas-chocolate-chips.jpg",category:"cupcakes",categoryLabel:"Cupcakes"},
-{id:85,title:"Berry Mousse Cups",description:"Elegant individual cups with mousse layers and berries. Perfect dessert for individual servings.",image:"images/galletas-cumpleaños.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:86,title:"Cowboy Heart Cake Howdy 23",description:"Heart-shaped cake with cowboy theme. Hat, boots and message Howdy 23. Elegant country decoration.",image:"images/galletas-navidad.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:87,title:"Watermelon Decorated Pretzels",description:"Creative pretzels decorated with watermelon theme. Red, green and black colors with poppy seeds.",image:"images/galletas-tematicas-infantiles.jpg",category:"specialty",categoryLabel:"Cookies"},
-{id:88,title:"Christmas Chocolate Bombs",description:"Delicious hot chocolate bombs for Christmas.",image:"images/bombas-chocolate-navidad.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:89,title:"Enchanted Flowers Cake Pops",description:"Elegant cake pops decorated with fondant flowers and golden details.",image:"images/cake-pops-flores-encantadas.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:90,title:"Easter Cake Cups",description:"Cute individual cups with cake layers and Easter decorations.",image:"images/vasitos-pastel-pascua.jpg",category:"holiday",categoryLabel:"Special Dates"},
-{id:91,title:"Flans with Berries",description:"Smooth vanilla flans topped with fresh berry sauce.",image:"images/flanes-bayas.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:92,title:"Fruit Cake 60 Years",description:"Elegant semi-naked cake decorated with strawberries, blueberries and blackberries.",image:"images/pastel-frutas-60.jpg",category:"specialty",categoryLabel:"Specialty"},
-{id:93,title:"Flork Birthday Cake",description:"Cake with Flork character and customized message. Colorful sprinkles and gold leaf.",image:"images/pastel-flork-cumpleaños.jpg",category:"cakes",categoryLabel:"Cakes"},
-{id:94,title:"Apple Crumb Cake",description:"Classic apple cake with crunchy oatmeal and cinnamon crumb topping.",image:"images/pastel-manzana-crumb.jpg",category:"pies",categoryLabel:"Pies & Tarts"},
-{id:95,title:"Apple Lattice Cake",description:"Traditional apple cake with woven lattice crust.",image:"images/pastel-manzana-rejilla.jpg",category:"pies",categoryLabel:"Pies & Tarts"},
-{id:96,title:"Coconut Cake",description:"Tropical coconut cake with creamy filling and shredded coconut topping.",image:"images/pastel-coco.jpg",category:"pies",categoryLabel:"Pies & Tarts"},
-{id:97,title:"Pecan Pie",description:"Traditional pecan pie with sticky-sweet filling and toasted pecans.",image:"images/pastel-pecana.jpg",category:"pies",categoryLabel:"Pies & Tarts"}
+{id:1,title:"Stitch and Angel Sofia Cake",description:"Birthday cake with Stitch and Angel characters. Number 7, pink hearts.",image:"images/cakesicle-unicornio-arcoiris.jpg",category:"cakes"},
+{id:2,title:"Bluey Enzo 1st Birthday Cake",description:"Bluey and Bingo characters, Australian style house, number 1.",image:"images/cakesicle-flores.jpg",category:"cakes"},
+{id:3,title:"Heart Cake 14 Years",description:"Heart-shaped with red and pink hearts and golden pearls.",image:"images/cakesicle-dinosaurio.jpg",category:"cakes"},
+{id:4,title:"Graduation Anna 2024 Cake",description:"CLASS OF 2024 ANNA, graduation cap, stacked books, flowers.",image:"images/cakesicle-conejito.jpg",category:"specialty"},
+{id:5,title:"Flan with Strawberries and Cream",description:"Flan with fresh strawberries and whipped cream.",image:"images/cakesicle-cumpleaños.jpg",category:"specialty"},
+{id:6,title:"Happy Valentine's Day Cake",description:"Valentine's Day message in black cursive, red hearts.",image:"images/cakesicle-selva.jpg",category:"holiday"},
+{id:7,title:"Halloween Pumpkin Cake",description:"Realistic pumpkin-shaped cake for Halloween.",image:"images/cakesicle-princesa.jpg",category:"holiday"},
+{id:8,title:"Heart Cake Brooke 14",description:"Heart-shaped birthday cake with Happy Birthday Brooke.",image:"images/cakesicle-sirena.jpg",category:"cakes"},
+{id:9,title:"Bento Cake Flork I Love U",description:"Small bento cake with Flork character holding I LOVE U sign.",image:"images/cakesicle-panda.jpg",category:"specialty"},
+{id:10,title:"Mother's Day Pink Flowers Cake",description:"Pink buttercream roses, Happy Mother's Day topper.",image:"images/cakesicle-frozen.jpg",category:"specialty"},
+{id:11,title:"Kids and Grandparents Cake",description:"HAPPY BIRTHDAY GRANDPA message, gold leaf.",image:"images/cakesicle-paw-patrol.jpg",category:"cakes"},
+{id:12,title:"50th Anniversary Cake",description:"50th wedding anniversary, vintage couple photo, golden roses.",image:"images/cakesicle-stitch.jpg",category:"specialty"},
+{id:18,title:"Mermaid Ocean Cake",description:"Ocean/mermaid theme, fish scales in turquoise and purple.",image:"images/cakesicle-batman.jpg",category:"cakes"},
+{id:22,title:"Wedding Tuxedo Cakesicles Set",description:"12 wedding cakesicles, initials S&J, white roses.",image:"images/cakesicle-boda-novios.jpg",category:"specialty"},
+{id:23,title:"Unicorn Cake",description:"Golden horn, ears, multicolored mane, pastel colors.",image:"images/pastel-unicornio.jpg",category:"cakes"},
+{id:24,title:"Giant Macaron Cake",description:"Turquoise giant macaron, small macarons with edible gold.",image:"images/pastel-sirena.jpg",category:"specialty"},
+{id:29,title:"Cocomelon Cake",description:"Watermelon-shaped Cocomelon cake with characters.",image:"images/pastel-cocomelon.jpg",category:"cakes"},
+{id:41,title:"Carrot Cake",description:"Two-tier naked carrot cake, cream cheese frosting.",image:"images/pastel-mario-bros.jpg",category:"cakes"},
+{id:44,title:"Elegant Floral Cupcakes",description:"Dozen cupcakes as realistic flowers with gold leaf.",image:"images/pastel-minecraft.jpg",category:"cupcakes"},
+{id:46,title:"Western Cowboy Cake",description:"Cowboy hat and boots, braided rope texture.",image:"images/pastel-vaquero-cowboy.jpg",category:"cakes"},
+{id:48,title:"Graduation Cake",description:"Graduation cap, diploma, congratulations message.",image:"images/pastel-graduacion.jpg",category:"specialty"},
+{id:52,title:"Jack Skellington Cake",description:"Nightmare Before Christmas style cake.",image:"images/pastel-jack-skellington.jpg",category:"holiday"},
+{id:53,title:"Whiskey Barrel Cake",description:"Cake shaped like a whiskey barrel.",image:"images/pastel-barrica-whiskey.jpg",category:"specialty"},
+{id:54,title:"Oreo Cake",description:"Oreo cookies, cream frosting.",image:"images/pastel-oreo-cumpleaños.jpg",category:"cakes"},
+{id:58,title:"Chocolate Rose Bouquet",description:"Bouquet of roses made entirely of chocolate.",image:"images/ramos-rosas-chocolate.jpg",category:"specialty"},
+{id:68,title:"Strawberries with Chocolate",description:"Chocolate-covered strawberries with elaborate flowers.",image:"images/fresas-chocolate-flores.jpg",category:"specialty"},
+{id:74,title:"Graduation Cupcakes",description:"Graduation cupcakes with caps and diplomas.",image:"images/cupcakes-graduacion.jpg",category:"cupcakes"},
+{id:75,title:"Halloween Cupcakes",description:"Spooky Halloween cupcakes.",image:"images/cupcakes-halloween.jpg",category:"holiday"},
+{id:80,title:"Watermelon Cupcakes 1st Birthday",description:"Watermelon-themed cupcakes for first birthday.",image:"images/cupcakes-sandia-1er-año.jpg",category:"cupcakes"},
+{id:81,title:"Highland Cows Cupcakes",description:"Cupcakes with Highland cow design.",image:"images/cupcakes-vacas-highland.jpg",category:"cupcakes"},
+{id:88,title:"Christmas Chocolate Bombs",description:"Hot chocolate bombs for Christmas.",image:"images/bombas-chocolate-navidad.jpg",category:"holiday"},
+{id:91,title:"Flans with Berries",description:"Vanilla flans with fresh berry sauce.",image:"images/flanes-bayas.jpg",category:"specialty"},
+{id:93,title:"Flork Birthday Cake",description:"Flork character, colorful sprinkles, gold leaf.",image:"images/pastel-flork-cumpleaños.jpg",category:"cakes"},
+{id:94,title:"Apple Crumb Cake",description:"Apple cake with oatmeal cinnamon crumb topping.",image:"images/pastel-manzana-crumb.jpg",category:"pies"},
+{id:95,title:"Apple Lattice Cake",description:"Apple cake with woven lattice crust.",image:"images/pastel-manzana-rejilla.jpg",category:"pies"},
+{id:96,title:"Coconut Cake",description:"Tropical coconut cake with creamy filling.",image:"images/pastel-coco.jpg",category:"pies"},
+{id:97,title:"Pecan Pie",description:"Pecan pie with sticky-sweet filling.",image:"images/pastel-pecana.jpg",category:"pies"}
 ];
 
 // ── AUTH ──
@@ -843,60 +837,70 @@ function onDrop(ev){ev.preventDefault();document.getElementById('dz').classList.
 function onFile(ev){const f=ev.target.files[0];if(f)loadF(f);}
 function loadF(f){
   upFileName=f.name||'';
+  window._pendingUploadFile=f; // Store for Supabase upload on save
   const r=new FileReader();
   r.onload=function(e){
     upB64=e.target.result;document.getElementById('fImg').value=upB64;
     const p=document.getElementById('dp2');p.src=upB64;p.style.display='block';
     document.getElementById('dz').classList.add('hi');
     document.getElementById('aiAb').disabled=false;
-    toast('📷 Photo ready! Click AI button to analyze.','ok');
-  };
-  r.readAsDataURL(f);
-}
-
-// ── EDIT MODAL FILE UPLOAD ──
-let mUpB64 = null;
-function onModalDrop(ev) {
-  ev.preventDefault();
-  document.getElementById('mDz').classList.remove('over');
-  const f = ev.dataTransfer.files[0];
-  if (f && f.type.startsWith('image/')) loadModalFile(f);
-}
-function onModalFile(ev) {
-  const f = ev.target.files[0];
-  if (f) loadModalFile(f);
-}
-function loadModalFile(f) {
-  const r = new FileReader();
-  r.onload = function(e) {
-    mUpB64 = e.target.result;
-    const prev = document.getElementById('mPrev');
-    prev.src = mUpB64;
-    prev.style.display = 'block';
-    document.getElementById('mDi').style.display = 'none';
-    document.getElementById('mDt').textContent = f.name;
-    document.getElementById('mDz').classList.add('hi');
-    // Clear URL field since we have a photo
-    document.getElementById('mI').value = '';
-    toast('📷 Photo ready!','ok');
+    toast('📷 Photo ready! Will upload to cloud on save.','ok');
   };
   r.readAsDataURL(f);
 }
 
 // ── SAVE ──
-function saveProd(){
+async function saveProd(){
   const nm=document.getElementById('fN').value.trim();
   const cat=document.getElementById('fC').value;
   if(!nm){toast('Enter a product name','er');return;}
   if(!cat){toast('Select a category','er');return;}
+
+  const saveBtn=document.querySelector('.sb');
+  if(saveBtn){saveBtn.disabled=true;saveBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';}
+
+  let imageUrl=document.getElementById('fI').value.trim()||document.getElementById('fImg').value||FB;
+
+  // If there's a local file queued (from drop zone), upload to Supabase Storage
+  if(window._pendingUploadFile){
+    try{
+      toast('⏫ Uploading image to cloud...','ok');
+      imageUrl=await sbUploadImage(window._pendingUploadFile);
+      window._pendingUploadFile=null;
+      toast('✅ Image uploaded!','ok');
+    }catch(e){
+      toast('⚠️ Image upload failed, saving without cloud image','er');
+    }
+  }
+
+  // Save to Supabase DB
+  let sbId=null;
+  try{
+    const rows=await sbSaveProduct({
+      nombre:nm,
+      descripcion:document.getElementById('fD').value.trim(),
+      categoria:cat,
+      precio:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,
+      imagen_url:imageUrl.startsWith('data:')?null:imageUrl
+    });
+    if(rows&&rows[0])sbId=rows[0].id;
+    toast('☁️ Saved to Supabase!','ok');
+  }catch(e){
+    toast('⚠️ Cloud save failed — saved locally only','er');
+  }
+
+  // Also save to localStorage as fallback
   const c=getC();
-  c.push({id:Date.now(),title:nm,description:document.getElementById('fD').value.trim(),category:cat,categoryLabel:CL[cat]||cat,price:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,badge:document.getElementById('fB').value||null,image:(document.getElementById('fI').value.trim()||document.getElementById('fImg').value||FB),_custom:true,_added:Date.now()});
+  c.push({id:sbId||Date.now(),title:nm,description:document.getElementById('fD').value.trim(),category:cat,categoryLabel:CL[cat]||cat,price:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,badge:document.getElementById('fB').value||null,image:imageUrl,_custom:true,_added:Date.now(),_sbId:sbId});
   setC(c);
+
   ['fN','fD','fP','fI','fImg'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fC').value='';document.getElementById('fB').value='';
   document.getElementById('dp2').style.display='none';document.getElementById('dz').classList.remove('hi');
   document.getElementById('aiAb').disabled=true;document.getElementById('aiR').classList.remove('on');
-  upB64=null;aiD=null;upFileName='';upS();toast('✅ Product saved!','ok');
+  upB64=null;aiD=null;upFileName='';
+  if(saveBtn){saveBtn.disabled=false;saveBtn.innerHTML='<i class="fas fa-save"></i> Save Product';}
+  upS();toast('✅ Product saved!','ok');
   sw('cat',document.querySelector('[data-t="cat"]'));
 }
 
@@ -948,41 +952,46 @@ function openEdit(id){
   // Reset AI state
   editAiD=null;document.getElementById('eAiR').style.display='none';
   document.getElementById('eOv').classList.add('on');
-  // Reset photo upload state
-  mUpB64 = null;
-  const mPrev = document.getElementById('mPrev');
-  if (mPrev) { mPrev.style.display='none'; mPrev.src=''; }
-  const mDi = document.getElementById('mDi');
-  if (mDi) mDi.style.display = 'block';
-  const mDt = document.getElementById('mDt');
-  if (mDt) mDt.textContent = 'Drag photo here or tap to select';
-  const mDz = document.getElementById('mDz');
-  if (mDz) mDz.classList.remove('hi');
-  const mFi = document.getElementById('mFileIn');
-  if (mFi) mFi.value = '';
-  // Show current image in preview if exists
-  if (p.image && !p.image.startsWith('data:') && !p.image.includes('placeholder')) {
-    if (mPrev) { mPrev.src = resolveImg(p.image); mPrev.style.display = 'block'; }
-    if (mDi) mDi.style.display = 'none';
-    if (mDt) mDt.textContent = p.image.split('/').pop() || 'Current image';
-  }
 }
 function closeEdit(){document.getElementById('eOv').classList.remove('on');eId=null;}
-function saveEdit(){
+async function saveEdit(){
   if(!eId)return;const nm=document.getElementById('mN').value.trim();if(!nm){toast('Name required','er');return;}
   const cat=document.getElementById('mC').value;const c=getC();const i=c.findIndex(p=>p.id===eId);
   const orig=merged().find(p=>p.id===eId)||{};
-  const upd={...orig,id:eId,title:nm,description:document.getElementById('mD').value.trim(),category:cat,categoryLabel:CL[cat]||cat,price:document.getElementById('mP').value?parseFloat(document.getElementById('mP').value):null,badge:document.getElementById('mB').value||null,image:(mUpB64 || document.getElementById('mI').value.trim() || orig.image),_custom:true};
+  const newImg=document.getElementById('mI').value.trim()||orig.image;
+  const upd={...orig,id:eId,title:nm,description:document.getElementById('mD').value.trim(),category:cat,categoryLabel:CL[cat]||cat,price:document.getElementById('mP').value?parseFloat(document.getElementById('mP').value):null,badge:document.getElementById('mB').value||null,image:newImg,_custom:true};
   if(i>=0)c[i]=upd;else c.push(upd);
-  setC(c);upS();rl();closeEdit();mUpB64=null;toast('✅ Updated!','ok');
+  setC(c);
+
+  // Sync to Supabase if it has a DB id
+  try{
+    const sbId=orig._sbId||eId;
+    if(sbId&&String(sbId).length>6){ // Supabase ids are large ints
+      await sbUpdateProduct(sbId,{nombre:nm,descripcion:upd.description,categoria:cat,precio:upd.price,imagen_url:newImg&&!newImg.startsWith('data:')?newImg:null});
+      toast('☁️ Updated in Supabase!','ok');
+    }
+  }catch(e){toast('⚠️ Cloud update failed','er');}
+
+  upS();rl();closeEdit();toast('✅ Updated!','ok');
 }
-function delP(id){
+async function delP(id){
   if(!confirm('Delete this product?'))return;
+  const orig=merged().find(p=>p.id===id)||{};
   // Remove from custom list if present
   setC(getC().filter(p=>p.id!==id));
   // Mark base product as deleted so it stays hidden
   const isBase=BASE.some(p=>p.id===id);
   if(isBase){const d=getDeleted();d.add(id);setDeleted(d);}
+
+  // Delete from Supabase
+  try{
+    const sbId=orig._sbId||id;
+    if(sbId&&String(sbId).length>6){
+      await sbDeleteProduct(sbId);
+      toast('☁️ Deleted from Supabase','ok');
+    }
+  }catch(e){toast('⚠️ Cloud delete failed','er');}
+
   upS();rl();toast('🗑️ Deleted','ok');
 }
 document.getElementById('eOv').addEventListener('click',function(e){if(e.target===this)closeEdit();});
