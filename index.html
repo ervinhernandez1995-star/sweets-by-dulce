@@ -1096,7 +1096,18 @@
             animation: buttonClick 0.15s ease;
         }
 
-        /* Catalog Section */
+        .hero-btn-ai {
+            background: linear-gradient(135deg, rgba(74,55,40,0.85), rgba(61,41,20,0.9));
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.25);
+            backdrop-filter: blur(10px);
+        }
+        .hero-btn-ai:hover {
+            background: linear-gradient(135deg, rgba(74,55,40,1), rgba(61,41,20,1));
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(74,55,40,0.4);
+        }
+        .hero-btn-ai:active { animation: buttonClick 0.15s ease; }
         .catalog-wrapper {
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(20px);
@@ -1615,10 +1626,11 @@
             font-weight: 700;
             margin-bottom: 0.8rem;
             width: fit-content;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             max-width: 100%;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: break-word;
             color: white;
             text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
@@ -1639,6 +1651,9 @@
             color: #3D2914;
             margin-bottom: 0.8rem;
             font-weight: 600;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
         }
 
         /* Fixed Modal Footer - Always Visible at bottom of wrapper */
@@ -3100,9 +3115,103 @@
             box-shadow: 0 6px 25px rgba(255, 158, 181, 0.5);
         }
 
+        /* Floating AI Chat Button - round logo style (mirrors admin chat button) */
+        .floating-ai-btn {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            right: auto;
+            z-index: 9997;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 6px 18px rgba(255,107,157,0.55));
+            animation: cakeBounce 3s ease-in-out infinite;
+        }
+        .floating-ai-btn img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255,158,181,0.8);
+            background: linear-gradient(135deg, #FFD1DC, #FF9EB5);
+            display: block;
+        }
+        .floating-ai-btn:hover {
+            transform: scale(1.12) rotate(-5deg);
+            filter: drop-shadow(0 10px 28px rgba(255,107,157,0.7));
+        }
+
         /* ═══════════════════════════════════
            GROQ AI CHATBOT
         ═══════════════════════════════════ */
+
+        /* Hero AI invite bubble */
+        #heroAiBubble {
+            position: fixed;
+            bottom: 6rem;
+            right: 1.5rem;
+            display: none;
+            align-items: center;
+            gap: 0.7rem;
+            background: rgba(255,255,255,0.97);
+            border: 1.5px solid rgba(255,158,181,0.5);
+            border-radius: 20px 20px 4px 20px;
+            padding: 0.75rem 1rem 0.75rem 0.75rem;
+            box-shadow: 0 8px 32px rgba(255,107,157,0.25);
+            cursor: pointer;
+            z-index: 9996;
+            max-width: 260px;
+            animation: bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #heroAiBubble:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 36px rgba(255,107,157,0.35);
+        }
+        @keyframes bubblePop {
+            from { opacity: 0; transform: scale(0.7) translateY(10px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .haib-avatar img {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,158,181,0.7);
+            flex-shrink: 0;
+            display: block;
+        }
+        .haib-text {
+            display: flex; flex-direction: column; gap: 0.1rem; flex: 1;
+        }
+        .haib-name {
+            font-family: 'Fredoka One', cursive;
+            font-size: 0.82rem;
+            color: var(--chocolate-brown);
+            line-height: 1.2;
+        }
+        .haib-msg {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #666;
+            line-height: 1.3;
+        }
+        .haib-close {
+            background: none; border: none; cursor: pointer;
+            color: #bbb; font-size: 0.75rem; padding: 2px 4px;
+            border-radius: 50%; flex-shrink: 0;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        .haib-close:hover { color: #999; }
+        @media (max-width: 480px) {
+            #heroAiBubble { max-width: 220px; bottom: 5.5rem; right: 1rem; }
+        }
         #chatbotBtn {
             position: fixed;
             bottom: 1.5rem;
@@ -3175,7 +3284,8 @@
             justify-content: center;
             border: 2px solid white;
             pointer-events: none;
-        }       #chatWindow.open {
+        }
+        #chatWindow.open {
             display: flex;
             transform: translateY(0);
             opacity: 1;
@@ -3348,6 +3458,11 @@
         💳 Payments
     </a>
 
+    <!-- Floating AI Chat Button -->
+    <button class="floating-ai-btn" id="floatingAiBtn" title="Chat with Dulce's AI Assistant">
+        <img src="images/logo.png" onerror="this.style.display='none';this.parentNode.innerHTML='🤖'" alt="AI Assistant">
+    </button>
+
     <!-- Global Floating Icons Background -->
     <div class="floating-icons" id="floatingIconsGlobal"><span class="floating-icon blur" style="left: 97.6721%; top: 4.35469%; animation-delay: 0.790933s; animation-duration: 7.90441s; font-size: 1.95861rem; z-index: 1;">🍓</span><span class="floating-icon blur" style="left: 46.0676%; top: 31.1076%; animation-delay: 2.87447s; animation-duration: 8.15695s; font-size: 1.71158rem; z-index: 1;">🍰</span><span class="floating-icon blur" style="left: 52.7596%; top: 76.0745%; animation-delay: 1.82879s; animation-duration: 6.13433s; font-size: 1.28537rem; z-index: 2;">🧁</span><span class="floating-icon" style="left: 42.0705%; top: 18.0619%; animation-delay: 6.71244s; animation-duration: 6.39088s; font-size: 2.16481rem; z-index: 1;">🎂</span><span class="floating-icon blur" style="left: 32.7796%; top: 48.656%; animation-delay: 5.61113s; animation-duration: 7.71973s; font-size: 2.14672rem; z-index: 1;">🍫</span><span class="floating-icon blur" style="left: 90.5712%; top: 2.68932%; animation-delay: 2.17642s; animation-duration: 7.04799s; font-size: 2.42341rem; z-index: 1;">💕</span><span class="floating-icon blur" style="left: 30.9899%; top: 84.5363%; animation-delay: 6.28514s; animation-duration: 7.61643s; font-size: 2.04655rem; z-index: 1;">✨</span><span class="floating-icon" style="left: 59.4407%; top: 42.3836%; animation-delay: 3.37303s; animation-duration: 7.98166s; font-size: 1.54029rem; z-index: 0;">⭐</span><span class="floating-icon blur" style="left: 13.2606%; top: 26.6198%; animation-delay: 7.21779s; animation-duration: 8.26677s; font-size: 1.53976rem; z-index: 1;">💫</span><span class="floating-icon blur" style="left: 55.2941%; top: 53.9132%; animation-delay: 0.595192s; animation-duration: 7.68943s; font-size: 2.35766rem; z-index: 0;">🍓</span><span class="floating-icon blur" style="left: 58.1122%; top: 68.4895%; animation-delay: 6.90404s; animation-duration: 6.1997s; font-size: 2.21645rem; z-index: 2;">🍋</span><span class="floating-icon" style="left: 14.5136%; top: 5.01602%; animation-delay: 7.59456s; animation-duration: 8.1691s; font-size: 1.38486rem; z-index: 2;">🍒</span><span class="floating-icon blur" style="left: 35.1695%; top: 46.6755%; animation-delay: 2.13457s; animation-duration: 9.85803s; font-size: 1.84736rem; z-index: 0;">🍪</span><span class="floating-icon blur" style="left: 27.9871%; top: 18.334%; animation-delay: 5.2268s; animation-duration: 6.1273s; font-size: 2.18827rem; z-index: 1;">🍩</span><span class="floating-icon blur" style="left: 36.4039%; top: 67.2431%; animation-delay: 1.51152s; animation-duration: 8.32384s; font-size: 1.62188rem; z-index: 0;">🧇</span><span class="floating-icon" style="left: 0.6241%; top: 1.02535%; animation-delay: 0.948631s; animation-duration: 9.6273s; font-size: 1.80823rem; z-index: 2;">🥐</span><span class="floating-icon blur" style="left: 43.8382%; top: 16.6075%; animation-delay: 2.312s; animation-duration: 9.70103s; font-size: 1.22702rem; z-index: 2;">🥯</span><span class="floating-icon blur" style="left: 95.7352%; top: 19.6624%; animation-delay: 3.44928s; animation-duration: 9.83046s; font-size: 1.91607rem; z-index: 1;">🥞</span><span class="floating-icon blur" style="left: 38.6684%; top: 92.2621%; animation-delay: 4.61988s; animation-duration: 7.56522s; font-size: 1.39425rem; z-index: 0;">🧇</span><span class="floating-icon" style="left: 15.5114%; top: 35.5447%; animation-delay: 6.63241s; animation-duration: 8.50711s; font-size: 1.28231rem; z-index: 2;">🍯</span><span class="floating-icon blur" style="left: 65.1173%; top: 93.5211%; animation-delay: 0.305254s; animation-duration: 6.90221s; font-size: 1.4208rem; z-index: 2;">🍓</span><span class="floating-icon blur" style="left: 75.6928%; top: 74.6089%; animation-delay: 6.59589s; animation-duration: 6.90783s; font-size: 2.11286rem; z-index: 1;">🍰</span><span class="floating-icon blur" style="left: 58.3287%; top: 11.4655%; animation-delay: 2.75306s; animation-duration: 8.4077s; font-size: 1.04051rem; z-index: 0;">🧁</span><span class="floating-icon" style="left: 25.367%; top: 29.2959%; animation-delay: 5.79423s; animation-duration: 9.4536s; font-size: 1.28692rem; z-index: 2;">🎂</span><span class="floating-icon blur" style="left: 24.3033%; top: 72.0391%; animation-delay: 3.75233s; animation-duration: 7.43159s; font-size: 1.77881rem; z-index: 0;">🍫</span><span class="floating-icon blur" style="left: 55.4219%; top: 94.8734%; animation-delay: 5.61561s; animation-duration: 9.74911s; font-size: 1.97198rem; z-index: 0;">💕</span><span class="floating-icon blur" style="left: 10.8265%; top: 24.8243%; animation-delay: 4.8373s; animation-duration: 8.97253s; font-size: 1.5771rem; z-index: 2;">✨</span><span class="floating-icon" style="left: 38.9741%; top: 54.6865%; animation-delay: 6.17011s; animation-duration: 6.71057s; font-size: 2.34081rem; z-index: 0;">⭐</span><span class="floating-icon blur" style="left: 1.03824%; top: 94.8142%; animation-delay: 7.10992s; animation-duration: 9.54223s; font-size: 2.32025rem; z-index: 1;">💫</span><span class="floating-icon blur" style="left: 9.45773%; top: 49.5833%; animation-delay: 7.53942s; animation-duration: 6.36861s; font-size: 2.19322rem; z-index: 2;">🍓</span><span class="floating-icon blur" style="left: 9.36755%; top: 78.4366%; animation-delay: 7.0682s; animation-duration: 8.57101s; font-size: 1.2961rem; z-index: 2;">🍋</span><span class="floating-icon" style="left: 86.2039%; top: 38.5872%; animation-delay: 0.70332s; animation-duration: 9.98857s; font-size: 2.11968rem; z-index: 1;">🍒</span><span class="floating-icon blur" style="left: 70.4575%; top: 35.1957%; animation-delay: 1.62573s; animation-duration: 8.61781s; font-size: 2.44691rem; z-index: 0;">🍪</span><span class="floating-icon blur" style="left: 4.00802%; top: 99.3823%; animation-delay: 4.02151s; animation-duration: 8.213s; font-size: 2.45127rem; z-index: 1;">🍩</span><span class="floating-icon blur" style="left: 32.7998%; top: 64.6294%; animation-delay: 4.0233s; animation-duration: 6.73015s; font-size: 2.34733rem; z-index: 0;">🧇</span></div>
 
@@ -3393,6 +3508,7 @@
         <button class="category-nav-btn" onclick="filterByCategory('cakesicles', this)">Cakesicles</button>
         <button class="category-nav-btn" onclick="filterByCategory('special', this)">Specials</button>
         <button class="category-nav-btn" onclick="filterByCategory('boxes', this)">Boxes</button>
+        <button class="category-nav-btn" onclick="filterByCategory('drinks', this)">🥤 Drinks</button>
     </nav>
 
     <!-- Hero Section -->
@@ -6594,25 +6710,156 @@
         // Category label map
         const ADMIN_CAT_LABELS = {cakes:'Cakes',cupcakes:'Cupcakes',specialty:'Specialty',holiday:'Special Dates',pies:'Pies & Tarts',drinks:'Drinks'};
 
-        // Merge with admin-added products from localStorage
-        try {
-            const deletedIds = new Set(JSON.parse(localStorage.getItem('sbd_deleted') || '[]'));
-            // Remove deleted base products
-            for (let i = products.length - 1; i >= 0; i--) {
-                if (deletedIds.has(products[i].id)) products.splice(i, 1);
+        // Merge with admin-added products from localStorage + products-override.json
+        function resolveAdminImg(img) {
+            if (img && img.startsWith('__local:')) {
+                const key = img.replace('__local:', '');
+                return localStorage.getItem(key) || 'images/placeholder.jpg';
             }
-            const adminProducts = JSON.parse(localStorage.getItem('sbd_products') || '[]');
-            adminProducts.forEach(ap => {
-                if (deletedIds.has(ap.id)) return;
-                if (!ap.categoryLabel && ap.category) ap.categoryLabel = ADMIN_CAT_LABELS[ap.category] || ap.category;
-                const existing = products.find(p => p.id === ap.id);
-                if (existing) {
-                    Object.assign(existing, ap);
-                } else {
-                    products.push(ap);
+            return img;
+        }
+        function applyAdminProducts(adminProducts) {
+            try {
+                const deletedIds = new Set(JSON.parse(localStorage.getItem('sbd_deleted') || '[]'));
+                for (let i = products.length - 1; i >= 0; i--) {
+                    if (deletedIds.has(products[i].id)) products.splice(i, 1);
+                }
+                adminProducts.forEach(ap => {
+                    if (deletedIds.has(ap.id)) return;
+                    if (ap.image) ap.image = resolveAdminImg(ap.image);
+                    if (!ap.categoryLabel && ap.category) ap.categoryLabel = ADMIN_CAT_LABELS[ap.category] || ap.category;
+                    const existing = products.find(p => p.id === ap.id);
+                    if (existing) { Object.assign(existing, ap); } else { products.push(ap); }
+                });
+            } catch(e) { console.warn('applyAdminProducts error', e); }
+        }
+        try {
+            const localProducts = JSON.parse(localStorage.getItem('sbd_products') || '[]');
+            applyAdminProducts(localProducts);
+        } catch(e) { console.warn('Could not load admin products', e); }
+        // ══════════════════════════════════════════════════
+        // SUPABASE INTEGRATION — Load products from cloud
+        // ══════════════════════════════════════════════════
+        const SUPABASE_URL = 'https://ybdybhrbtwuzninrgamv.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_T_ycHkSbs3MqiWlh6luhnw_aN2PtFeP';
+
+        function supaFetch(path, opts) {
+            return fetch(SUPABASE_URL + path, {
+                ...opts,
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': 'Bearer ' + SUPABASE_KEY,
+                    'Content-Type': 'application/json',
+                    ...(opts && opts.headers)
                 }
             });
-        } catch(e) { console.warn('Could not load admin products', e); }
+        }
+
+        function mapSupabaseProduct(row) {
+            return {
+                id: row.id,
+                title: row.nombre,
+                description: row.descripcion || '',
+                category: row.categoria || 'specialty',
+                categoryLabel: ADMIN_CAT_LABELS[row.categoria] || row.categoria || 'Specialty',
+                price: row.precio || null,
+                image: row.imagen_url || '',
+                badge: row.badge || null,
+                _supabase: true
+            };
+        }
+
+        function refreshCatalog() {
+            const query = document.getElementById('searchInput');
+            const q = query ? query.value : '';
+            const active = document.querySelector('.filter-btn.active');
+            const filter = active ? active.dataset.filter : 'all';
+            let filtered = products;
+            if (q) filtered = filtered.filter(p => p.title.toLowerCase().includes(q.toLowerCase()));
+            if (filter && filter !== 'all') filtered = filtered.filter(p => p.category === filter);
+            if (typeof renderProducts === 'function') renderProducts(filtered);
+        }
+
+        // Load from Supabase on page load
+        supaFetch('/rest/v1/productos?select=*&order=id.asc')
+            .then(r => r.ok ? r.json() : null)
+            .then(rows => {
+                if (!rows || !rows.length) return;
+                rows.forEach(row => {
+                    const sp = mapSupabaseProduct(row);
+                    const existing = products.find(p => p.title === sp.title && !p._supabase);
+                    if (existing) {
+                        // Update existing static product with cloud data (price, image_url, etc.)
+                        if (sp.price) existing.price = sp.price;
+                        if (sp.image && sp.image.startsWith('http')) existing.image = sp.image;
+                        existing._supabaseId = row.id;
+                    } else {
+                        // New product added via admin — add to catalog
+                        const alreadyIn = products.find(p => p.id === sp.id);
+                        if (!alreadyIn) products.push(sp);
+                    }
+                });
+                refreshCatalog();
+            })
+            .catch(() => {}); // Silently fall back to static catalog
+
+        // ══════════════════════════════════════════════════
+        // SUPABASE REALTIME — Live updates without refresh
+        // ══════════════════════════════════════════════════
+        (function initRealtime() {
+            try {
+                const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
+                const ws = new WebSocket(wsUrl);
+                let heartbeat;
+
+                ws.onopen = () => {
+                    ws.send(JSON.stringify({
+                        topic: 'realtime:public:productos',
+                        event: 'phx_join',
+                        payload: {},
+                        ref: '1'
+                    }));
+                    heartbeat = setInterval(() => {
+                        ws.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: null }));
+                    }, 25000);
+                };
+
+                ws.onmessage = (e) => {
+                    try {
+                        const msg = JSON.parse(e.data);
+                        if (!msg.payload || !msg.payload.record) return;
+                        const row = msg.payload.record;
+                        const sp = mapSupabaseProduct(row);
+
+                        if (msg.event === 'INSERT') {
+                            const alreadyIn = products.find(p => p.id === sp.id);
+                            if (!alreadyIn) {
+                                products.push(sp);
+                                refreshCatalog();
+                            }
+                        } else if (msg.event === 'UPDATE') {
+                            const idx = products.findIndex(p => p.id === sp.id || p._supabaseId === sp.id);
+                            if (idx !== -1) {
+                                products[idx] = { ...products[idx], ...sp };
+                                refreshCatalog();
+                            }
+                        } else if (msg.event === 'DELETE') {
+                            const oldId = msg.payload.old_record && msg.payload.old_record.id;
+                            if (oldId) {
+                                const idx = products.findIndex(p => p.id === oldId || p._supabaseId === oldId);
+                                if (idx !== -1) {
+                                    products.splice(idx, 1);
+                                    refreshCatalog();
+                                }
+                            }
+                        }
+                    } catch(err) {}
+                };
+
+                ws.onerror = () => {};
+                ws.onclose = () => { clearInterval(heartbeat); };
+            } catch(e) {}
+        })();
 
         // Initialize global floating icons
         function initFloatingIcons() {
@@ -6725,13 +6972,21 @@
                 
                 // Generate badge based on product
                 let badgeHTML = '';
-                const isBestSeller = ['unicorn', 'mermaid', 'chocolate', 'red velvet'].some(keyword => product.title.toLowerCase().includes(keyword));
-                const isLimited = ['holiday', 'special event', 'anniversary', 'valentine'].some(keyword => product.category.toLowerCase().includes(keyword));
-                
-                if (isBestSeller) {
+                // Use admin-set badge first, then fall back to keyword detection
+                if (product.badge === 'best-seller') {
                     badgeHTML = '<span class="product-badge badge-best-seller">⭐ Best Seller</span>';
-                } else if (isLimited) {
+                } else if (product.badge === 'limited') {
                     badgeHTML = '<span class="product-badge badge-limited">✨ Limited Edition</span>';
+                } else if (product.badge === 'new') {
+                    badgeHTML = '<span class="product-badge badge-new">🆕 New</span>';
+                } else {
+                    const isBestSeller = ['unicorn', 'mermaid', 'chocolate', 'red velvet'].some(keyword => product.title.toLowerCase().includes(keyword));
+                    const isLimited = ['holiday', 'special event', 'anniversary', 'valentine'].some(keyword => product.category.toLowerCase().includes(keyword));
+                    if (isBestSeller) {
+                        badgeHTML = '<span class="product-badge badge-best-seller">⭐ Best Seller</span>';
+                    } else if (isLimited) {
+                        badgeHTML = '<span class="product-badge badge-limited">✨ Limited Edition</span>';
+                    }
                 }
                 
                 card.innerHTML = `
@@ -6954,6 +7209,9 @@
                     break;
                 case 'boxes':
                     filterValue = 'pies';
+                    break;
+                case 'drinks':
+                    filterValue = 'drinks';
                     break;
             }
             
@@ -7550,6 +7808,19 @@ window.SBD_Analytics = SBD_Analytics;
     <!-- ═══════════════════════════════
          GROQ AI CHATBOT
     ═══════════════════════════════ -->
+
+    <!-- Hero AI invite bubble (appears after 3s, disappears when chat opens) -->
+    <div id="heroAiBubble" onclick="toggleChat(); document.getElementById('heroAiBubble').style.display='none';" title="Chat with our AI assistant">
+        <div class="haib-avatar">
+            <img src="images/logo.png" onerror="this.style.display='none'" alt="">
+        </div>
+        <div class="haib-text">
+            <span class="haib-name">Dulce's AI 🎂</span>
+            <span class="haib-msg">Need help choosing? Ask me anything!</span>
+        </div>
+        <button class="haib-close" onclick="event.stopPropagation(); document.getElementById('heroAiBubble').style.display='none';">✕</button>
+    </div>
+
     <button id="chatbotBtn" onclick="toggleChat()" title="Chat with Dulce's AI Assistant 🎂" aria-label="Open chat">
         <img src="images/logo.png" 
              onerror="this.style.display='none';this.parentNode.innerHTML='🎂'+this.parentNode.innerHTML" 
@@ -7623,10 +7894,13 @@ PERSONALITY: Be warm, sweet and enthusiastic. Use cake/sweet emojis occasionally
         chatOpen = !chatOpen;
         const win = document.getElementById('chatWindow');
         const btn = document.getElementById('chatbotBtn');
+        const bubble = document.getElementById('heroAiBubble');
         if (chatOpen) {
             win.style.display = 'flex';
             setTimeout(() => win.classList.add('open'), 10);
             btn.querySelector('.chat-notif').style.display = 'none';
+            // Hide invite bubble when chat opens
+            if (bubble) bubble.style.display = 'none';
             if (chatHistory.length === 0) {
                 setTimeout(() => addBotMessage("Hi! I'm Dulce's assistant 🎂 I can help you choose the perfect dessert, answer questions about our catalog, pricing, or how to order. What can I do for you today?"), 300);
             }
@@ -7635,6 +7909,29 @@ PERSONALITY: Be warm, sweet and enthusiastic. Use cake/sweet emojis occasionally
             setTimeout(() => { win.style.display = 'none'; }, 300);
         }
     }
+    window.toggleChat = toggleChat;
+
+    // Attach floating AI button click after function is ready
+    var _fab = document.getElementById('floatingAiBtn');
+    if (_fab) {
+        _fab.addEventListener('click', function() {
+            toggleChat();
+            var b = document.getElementById('heroAiBubble');
+            if (b) b.style.display = 'none';
+        });
+    }
+
+    // Show invite bubble after 3s if chat hasn't been opened yet
+    setTimeout(function() {
+        const bubble = document.getElementById('heroAiBubble');
+        if (bubble && !chatOpen) {
+            bubble.style.display = 'flex';
+            // Auto-hide after 12s if user ignores it
+            setTimeout(function() {
+                if (bubble && !chatOpen) bubble.style.display = 'none';
+            }, 12000);
+        }
+    }, 3000);
 
     function addBotMessage(text) {
         const msgs = document.getElementById('chatMessages');
