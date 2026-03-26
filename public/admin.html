@@ -176,6 +176,11 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
 .empty{text-align:center;padding:2.5rem 1rem;opacity:.45}
 .empty .ei{font-size:2.5rem;margin-bottom:.4rem}.empty p{font-weight:600;font-size:.88rem}
 @media(max-width:480px){.sg{grid-template-columns:repeat(2,1fr)}}
+
+/* Loading spinner for panel */
+.loading-panel{text-align:center;padding:3rem 1rem}
+.loading-spinner{width:50px;height:50px;border:4px solid rgba(255,158,181,.3);border-top-color:var(--dp);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -185,13 +190,13 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
   <div class="lc">
     <img src="images/logo.png" class="ll" onerror="this.style.display='none'" alt="Sweets by Dulce Logo">
     <h1 class="lt">Admin Panel</h1>
-    <p class="ls">Sweets by Dulce 🎂</p>
+    <p class="ls">Sweets by Dulce</p>
     <div class="ig">
       <i class="fas fa-lock"></i>
       <input type="password" id="pi" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
     </div>
     <button class="lb" onclick="login()"><i class="fas fa-sign-in-alt"></i> Enter</button>
-    <p class="le" id="le">Wrong password ❌</p>
+    <p class="le" id="le">Wrong password</p>
   </div>
 </div>
 
@@ -200,7 +205,7 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
   <header class="ah">
     <div class="ab">
       <img src="images/logo.png" class="abl" onerror="this.style.display='none'" alt="">
-      <span class="abt">Admin 🎂</span>
+      <span class="abt">Admin</span>
     </div>
     <div class="ahb">
       <a href="index.html" target="_blank" class="hb"><i class="fas fa-eye"></i> View Site</a>
@@ -209,10 +214,10 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
   </header>
 
   <div class="at">
-    <button class="on" data-t="db" onclick="sw('db',this)">📊 Dashboard</button>
-    <button data-t="add" onclick="sw('add',this)">➕ Add Product</button>
-    <button data-t="cat" onclick="sw('cat',this)">📋 Catalog</button>
-    <button data-t="img" onclick="sw('img',this)">🖼️ Image Matcher</button>
+    <button class="on" data-t="db" onclick="sw('db',this)">Dashboard</button>
+    <button data-t="add" onclick="sw('add',this)">Add Product</button>
+    <button data-t="cat" onclick="sw('cat',this)">Catalog</button>
+    <button data-t="img" onclick="sw('img',this)">Image Matcher</button>
   </div>
 
   <div class="abody">
@@ -221,42 +226,28 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
     <div class="tp on" id="t-db">
       <div class="sg">
         <div class="sc"><div class="sn" id="sT">—</div><div class="sl">Total Products</div></div>
-        <div class="sc"><div class="sn" id="sC">—</div><div class="sl">Added by You</div></div>
+        <div class="sc"><div class="sn" id="sC">—</div><div class="sl">Supabase Products</div></div>
         <div class="sc"><div class="sn" id="sV">—</div><div class="sl">Product Views</div></div>
       </div>
       
       <div class="cc" id="persistCard">
-        <div class="ct">💾 Data Persistence <span class="aitag">Survive Deploys</span></div>
-        <p style="font-size:.84rem;font-weight:600;opacity:.75;margin-bottom:.9rem">
-          Products only in localStorage are <strong>wiped on new deploys</strong>. 
-          Back up your catalog as JSON and re-import it after each deploy — or include <code style="background:rgba(255,158,181,.2);padding:.1rem .4rem;border-radius:5px">products-override.json</code> in your repo.
-        </p>
-        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
-          <button class="aib" onclick="exportData()">
-            <i class="fas fa-download"></i> Export catalog JSON
-          </button>
-          <button class="aib" style="background:linear-gradient(135deg,#2E7D62,#43AA8B)" onclick="document.getElementById('importFile').click()">
-            <i class="fas fa-upload"></i> Import catalog JSON
-          </button>
-          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-          <button class="aib" style="background:linear-gradient(135deg,#666,#888)" onclick="clearImgCache()">
-            <i class="fas fa-broom"></i> Free up storage
-          </button>
-          <button class="aib" id="migBtn" style="background:linear-gradient(135deg,#1a73e8,#0d47a1)" onclick="migrateCatalog()">
-            <i class="fas fa-cloud-upload-alt"></i> 📦 Migrate Catalog to Supabase
-          </button>
+        <div class="ct">Cloud Sync Status</div>
+        <div id="syncStatus" style="margin-bottom:.9rem;font-size:.84rem;font-weight:600;opacity:.75">
+          <p><i class="fas fa-cloud"></i> Loading from Supabase...</p>
         </div>
-        <div id="persistMsg" style="margin-top:.7rem;font-size:.83rem;font-weight:600;display:none"></div>
-        <div style="margin-top:.8rem;padding:.7rem 1rem;background:rgba(26,115,232,.08);border:1px solid rgba(26,115,232,.2);border-radius:12px;font-size:.8rem;font-weight:600;line-height:1.6">
-          ☁️ <strong>Supabase Connected:</strong> New products you add are automatically saved to the cloud and appear instantly on all devices — no redeploy needed. Use <em>Migrate Catalog</em> once to upload the 97 base products to Supabase.
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="aib" onclick="refreshFromSupabase()">
+            <i class="fas fa-sync-alt"></i> Refresh from Cloud
+          </button>
         </div>
       </div>
-<div class="cc">
-        <div class="ct">🔥 Most Viewed Products</div>
+
+      <div class="cc">
+        <div class="ct">Most Viewed Products</div>
         <div class="mb" id="topC"><p style="opacity:.5;font-size:.83rem">Visit the main site to start tracking views!</p></div>
       </div>
       <div class="cc">
-        <div class="ct">🤖 AI Business Analysis <span class="aitag"><i class="fas fa-robot"></i> Groq</span></div>
+        <div class="ct">AI Business Analysis</div>
         <p style="font-size:.84rem;font-weight:600;opacity:.72;margin-bottom:.8rem">Groq AI analyzes your catalog and gives sales recommendations based on popularity.</p>
         <button class="aib" id="aMb" onclick="runMgr()">
           <i class="fas fa-magic" id="aMi"></i> Run AI Analysis
@@ -272,26 +263,26 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
 
         <!-- DROP ZONE -->
         <div class="fi full" style="margin-bottom:.8rem">
-          <label>📷 Photo — Drag &amp; drop or tap to select</label>
+          <label>Photo</label>
           <div class="dz" id="dz"
                ondragover="event.preventDefault();this.classList.add('over')"
                ondragleave="this.classList.remove('over')"
                ondrop="onDrop(event)">
             <input type="file" id="fi2" accept="image/*" onchange="onFile(event)">
             <div class="di">🖼️</div>
-            <div class="dt">Drag photo here or tap to browse<br><small style="opacity:.6">💡 Tip: For best results paste an image URL below instead of uploading. Uploaded photos use limited browser storage (max ~2 products).</small></div>
+            <div class="dt">Drag photo here or tap to browse<br><small style="opacity:.6">Tip: For best results paste an image URL below instead of uploading.</small></div>
             <img id="dp2" class="dp" src="" alt="Preview">
           </div>
           <div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">
             <button class="aib" id="aiAb" onclick="aiAnalyzeImage()" disabled>
-              <i class="fas fa-robot" id="aiAi"></i> 🤖 Groq: Generate Description &amp; Price
+              <i class="fas fa-robot" id="aiAi"></i> Generate Description & Price
             </button>
           </div>
         </div>
 
         <!-- AI RESULT -->
         <div class="air" id="aiR">
-          <div class="airt">🤖 Groq AI Suggestion</div>
+          <div class="airt">AI Suggestion</div>
           <div class="aird" id="aiRd">—</div>
           <div class="airp" id="aiRp">—</div>
           <div class="airm" id="aiRm">—</div>
@@ -307,24 +298,24 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
             <label>Category *</label>
             <select id="fC">
               <option value="">— Select —</option>
-              <option value="cakes">🎂 Cakes</option>
-              <option value="cupcakes">🧁 Cupcakes</option>
-              <option value="specialty">✨ Specialty</option>
-              <option value="holiday">🎉 Special Dates</option>
-              <option value="pies">🥧 Pies &amp; Tarts</option>
-              <option value="drinks">🥤 Drinks</option>
+              <option value="cakes">Cakes</option>
+              <option value="cupcakes">Cupcakes</option>
+              <option value="specialty">Specialty</option>
+              <option value="holiday">Special Dates</option>
+              <option value="pies">Pies & Tarts</option>
+              <option value="drinks">Drinks</option>
             </select>
           </div>
           <div class="fi">
             <label>Badge</label>
             <select id="fB">
               <option value="">None</option>
-              <option value="best-seller">⭐ Best Seller</option>
-              <option value="limited">✨ Limited Edition</option>
-              <option value="new">🆕 New</option>
+              <option value="best-seller">Best Seller</option>
+              <option value="limited">Limited Edition</option>
+              <option value="new">New</option>
             </select>
           </div>
-          <div class="fi full"><label>Or paste image URL (optional)</label><input type="text" id="fI" placeholder="https://... or images/filename.jpg"></div>
+          <div class="fi full"><label>Image URL (optional)</label><input type="text" id="fI" placeholder="https://... or images/filename.jpg"></div>
         </div>
         <input type="hidden" id="fImg">
         <button class="sb" onclick="saveProd()"><i class="fas fa-save"></i> Save Product</button>
@@ -335,21 +326,20 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
     <div class="tp" id="t-cat">
       <div class="cc">
         <div class="ct"><i class="fas fa-list" style="color:var(--dp)"></i> Full Catalog</div>
-        <div class="lc2">
-          <div class="sw"><i class="fas fa-search"></i><input type="text" class="si" id="pS" placeholder="Search..." oninput="rl()"></div>
-          <select class="fs" id="pCF" onchange="rl()">
+        <div id="catalogLoading" class="loading-panel">
+          <div class="loading-spinner"></div>
+          <p>Loading products from Supabase...</p>
+        </div>
+        <div class="lc2" id="filtersContainer" style="display:none">
+          <div class="sw"><i class="fas fa-search"></i><input type="text" class="si" id="pS" placeholder="Search..." oninput="debouncedRL()"></div>
+          <select class="fs" id="pCF" onchange="debouncedRL()">
             <option value="">All categories</option>
             <option value="cakes">Cakes</option>
             <option value="cupcakes">Cupcakes</option>
             <option value="specialty">Specialty</option>
-            <option value="holiday">Holidays</option>
-            <option value="pies">Pies &amp; Tarts</option>
+            <option value="holiday">Special Dates</option>
+            <option value="pies">Pies & Tarts</option>
             <option value="drinks">Drinks</option>
-          </select>
-          <select class="fs" id="pSF" onchange="rl()">
-            <option value="">All</option>
-            <option value="custom">Added by me</option>
-            <option value="base">Original</option>
           </select>
         </div>
         <div class="pl" id="pL"></div>
@@ -360,16 +350,16 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
     <!-- IMAGE MATCHER -->
     <div class="tp" id="t-img">
       <div class="cc">
-        <div class="ct">🖼️ Smart Image Matcher <span class="aitag"><i class="fas fa-robot"></i> Groq powered</span></div>
+        <div class="ct">Smart Image Matcher</div>
         <p style="font-size:.84rem;font-weight:600;opacity:.75;margin-bottom:1rem">
-          Add your images to the <code style="background:rgba(255,158,181,.2);padding:.1rem .4rem;border-radius:6px">public/images/</code> folder, then click below to let Groq AI automatically match each image filename to the best matching product description.
+          Add your images to the public/images/ folder, then click below to let Groq AI automatically match each image filename to the best matching product description.
         </p>
         <div class="fi full" style="margin-bottom:.8rem">
           <label>Paste image filenames (one per line) from your /images/ folder:</label>
           <textarea id="imgList" style="min-height:120px;font-family:monospace;font-size:.82rem" placeholder="cakesicle-unicornio-arcoiris.jpg&#10;pastel-unicornio.jpg&#10;cupcakes-halloween.jpg&#10;..."></textarea>
         </div>
         <button class="aib" id="matchBtn" onclick="runImgMatch()">
-          <i class="fas fa-magic" id="matchIco"></i> 🤖 Match Images to Products
+          <i class="fas fa-magic" id="matchIco"></i> Match Images to Products
         </button>
         <div id="matchResult" style="margin-top:1rem;font-size:.84rem;font-weight:600;line-height:1.8;display:none;max-height:400px;overflow-y:auto"></div>
         <button id="applyMatchBtn" onclick="applyMatches()" style="display:none;margin-top:.8rem" class="sb">
@@ -385,17 +375,17 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
 <div class="ov" id="eOv">
   <div class="em">
     <div class="mh">
-      <h3>✏️ Edit Product</h3>
+      <h3>Edit Product</h3>
       <button class="mc2" onclick="closeEdit()"><i class="fas fa-times"></i></button>
     </div>
     <button class="aib" id="eAiAb" onclick="aiEditGroq()" style="margin-bottom:.8rem;width:100%">
-      <i class="fas fa-robot" id="eAiAi"></i> 🤖 Groq: Generate Description &amp; Price
+      <i class="fas fa-robot" id="eAiAi"></i> Generate Description & Price
     </button>
     <div id="eAiR" style="display:none;background:rgba(255,209,220,.25);border-radius:10px;padding:.7rem;margin-bottom:.8rem;font-size:.83rem;font-weight:600">
       <div id="eAiRd" style="margin-bottom:.3rem;color:#4A3728"></div>
       <div id="eAiRp" style="color:#c0392b;font-size:.9rem"></div>
       <div id="eAiRm" style="opacity:.7;font-size:.78rem;margin-top:.2rem"></div>
-      <button onclick="useAIEdit()" style="margin-top:.5rem;padding:.3rem .9rem;background:var(--dp);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:.8rem">✅ Apply</button>
+      <button onclick="useAIEdit()" style="margin-top:.5rem;padding:.3rem .9rem;background:var(--dp);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:.8rem">Apply</button>
     </div>
     <div class="fg">
       <div class="fi"><label>Name *</label><input type="text" id="mN" maxlength="80"></div>
@@ -404,16 +394,16 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
       <div class="fi">
         <label>Category</label>
         <select id="mC">
-          <option value="cakes">🎂 Cakes</option><option value="cupcakes">🧁 Cupcakes</option>
-          <option value="specialty">✨ Specialty</option><option value="holiday">🎉 Special Dates</option>
-          <option value="pies">🥧 Pies &amp; Tarts</option><option value="drinks">🥤 Drinks</option>
+          <option value="cakes">Cakes</option><option value="cupcakes">Cupcakes</option>
+          <option value="specialty">Specialty</option><option value="holiday">Special Dates</option>
+          <option value="pies">Pies & Tarts</option><option value="drinks">Drinks</option>
         </select>
       </div>
       <div class="fi">
         <label>Badge</label>
         <select id="mB">
-          <option value="">None</option><option value="best-seller">⭐ Best Seller</option>
-          <option value="limited">✨ Limited Edition</option><option value="new">🆕 New</option>
+          <option value="">None</option><option value="best-seller">Best Seller</option>
+          <option value="limited">Limited Edition</option><option value="new">New</option>
         </select>
       </div>
       <div class="fi full"><label>Image URL / filename</label><input type="text" id="mI" placeholder="images/filename.jpg or https://..."></div>
@@ -425,20 +415,19 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
 <!-- Admin Groq Chat -->
 <div class="achat">
   <button class="acfab" onclick="togAC()" title="AI Assistant">
-    <img src="images/logo.png" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🎂</text></svg>'" alt="AI">
+    <img src="images/logo.png" onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 100 100&quot;><text y=&quot;.9em&quot; font-size=&quot;80&quot;>&#x1F382;</text></svg>'" alt="AI">
   </button>
   <div class="acwin" id="acW">
     <div class="ach">
-      <div class="achl"><img src="images/logo.png" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🎂</text></svg>'" alt=""></div>
-      <div class="achinfo"><h4>Dulce AI 🤖</h4><p><span class="asd"></span>Admin Assistant</p></div>
+      <div class="achl"><img src="images/logo.png" onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 100 100&quot;><text y=&quot;.9em&quot; font-size=&quot;80&quot;>&#x1F382;</text></svg>'" alt=""></div>
+      <div class="achinfo"><h4>Dulce AI</h4><p><span class="asd"></span>Admin Assistant</p></div>
       <button class="acx" onclick="togAC()">✕</button>
     </div>
     <div class="acm" id="acM"></div>
     <div class="aqr" id="acQ">
-      <button class="aqb" onclick="aqSend('How do I add a new product?')">➕ Add product</button>
-      <button class="aqb" onclick="aqSend('What are my best sellers?')">🔥 Best sellers</button>
-      <button class="aqb" onclick="aqSend('Suggest a price for a custom cake')">💰 Pricing help</button>
-      <button class="aqb" onclick="aqSend('How does image matching work?')">🖼️ Image matching</button>
+      <button class="aqb" onclick="aqSend('How do I add a new product?')">Add product</button>
+      <button class="aqb" onclick="aqSend('What are my best sellers?')">Best sellers</button>
+      <button class="aqb" onclick="aqSend('Suggest a price for a custom cake')">Pricing help</button>
     </div>
     <div class="acir">
       <input class="aci" id="acI" placeholder="Ask me anything…" onkeydown="if(event.key==='Enter')acSend()" maxlength="400">
@@ -450,708 +439,1044 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
 <div class="toast" id="toast"></div>
 
 <script>
-// ── CONFIG ──
-const PASS='dulce2024';
-const SK='sbd_products';
-const DK='sbd_deleted';
-const AK='sbd_analytics';
-const GK='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';
-const GM='llama-3.3-70b-versatile';
-const CL={cakes:'Cakes',cupcakes:'Cupcakes',specialty:'Specialty',holiday:'Special Dates',pies:'Pies & Tarts',drinks:'Drinks'};
-const FB="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>🧁</text></svg>";
-const PGS=18;
-let pg=1,eId=null,upB64=null,aiD=null,acOpen=false,acInit=false,matchData=[];
+// ════════════════════════════════════════════════════════
+// CONFIG - These should be environment variables in production
+// ════════════════════════════════════════════════════════
+const PASS = 'dulce2024';
+const SB_URL = 'https://ybdybhrbtwuzninrgamv.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliZHlicmJ0d3V6bmlucmdhbXYiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MTc2OTIwMCwiZXhwIjoxOTU3MzQ1MjAwfQ.xsJpW8hAHFh3GKhcqM4nK4kH3Y3KjBsX6gMJ0LdD8cI';
+const SB_BUCKET = 'fotos-productos';
+const GK = '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';
+const GM = 'llama-3.3-70b-versatile';
+const CL = {cakes:'Cakes',cupcakes:'Cupcakes',specialty:'Specialty',holiday:'Special Dates',pies:'Pies & Tarts',drinks:'Drinks'};
+const FB = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="80">🧁</text></svg>';
+const PGS = 18;
 
-// ── SUPABASE CONFIG ──
-const SB_URL='https://ybdybhrbtwuzninrgamv.supabase.co';
-const SB_KEY='sb_publishable_T_ycHkSbs3MqiWlh6luhnw_aN2PtFeP';
-const SB_BUCKET='fotos-productos';
+let pg = 1;
+let eId = null;
+let upB64 = null;
+let aiD = null;
+let acOpen = false;
+let acInit = false;
+let matchData = [];
+let allProducts = []; // Unified product list from Supabase
+let upFileName = ''; // Initialize the variable properly
 
-function sbFetch(path, opts){
-  return fetch(SB_URL+path,{...opts,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...(opts&&opts.headers)}});
-}
+// ════════════════════════════════════════════════════════
+// SUPABASE FUNCTIONS
+// ════════════════════════════════════════════════════════
 
-async function sbUploadImage(file){
-  const ext=file.name.split('.').pop().toLowerCase();
-  const fname='producto-'+Date.now()+'.'+ext;
-  const res=await fetch(SB_URL+'/storage/v1/object/'+SB_BUCKET+'/'+fname,{
-    method:'POST',
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true'},
-    body:file
-  });
-  if(!res.ok){const e=await res.text();throw new Error('Upload failed: '+e);}
-  return SB_URL+'/storage/v1/object/public/'+SB_BUCKET+'/'+fname;
-}
-
-async function sbSaveProduct(data){
-  // data: {nombre, descripcion, categoria, precio, imagen_url}
-  const res=await sbFetch('/rest/v1/productos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(data)});
-  if(!res.ok){const e=await res.text();throw new Error('DB error: '+e);}
-  return res.json();
-}
-
-async function sbUpdateProduct(id, data){
-  const res=await sbFetch('/rest/v1/productos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(data)});
-  if(!res.ok){const e=await res.text();throw new Error('Update error: '+e);}
-  return res.json();
-}
-
-async function sbDeleteProduct(id){
-  const res=await sbFetch('/rest/v1/productos?id=eq.'+id,{method:'DELETE'});
-  if(!res.ok){const e=await res.text();throw new Error('Delete error: '+e);}
-}
-
-async function sbLoadProducts(){
-  const res=await sbFetch('/rest/v1/productos?select=*&order=id.asc');
-  if(!res.ok)return [];
-  return res.json();
-}
-
-// ── MIGRATE CATALOG TO SUPABASE ──
-async function migrateCatalog(){
-  if(!confirm('This will upload all 97 catalog products to Supabase. Continue?'))return;
-  const btn=document.getElementById('migBtn');
-  btn.disabled=true;btn.textContent='⏳ Migrating...';
-  let ok=0,fail=0;
-  for(const p of BASE){
-    try{
-      await sbFetch('/rest/v1/productos',{method:'POST',headers:{'Prefer':'return=minimal'},
-        body:JSON.stringify({nombre:p.title,descripcion:p.description||'',categoria:p.category,precio:p.price||null,imagen_url:p.image||null})
-      });
-      ok++;
-    }catch(e){fail++;}
-  }
-  btn.disabled=false;btn.textContent='📦 Migrate Catalog';
-  toast('✅ Migrated: '+ok+' products'+(fail?' | ⚠️ '+fail+' failed':''),'ok');
-}
-
-// ── BASE CATALOG (subset for admin) ──
-const BASE=[
-{id:1,title:"Stitch and Angel Sofia Cake",description:"Birthday cake with Stitch and Angel characters. Number 7, pink hearts.",image:"images/cakesicle-unicornio-arcoiris.jpg",category:"cakes"},
-{id:2,title:"Bluey Enzo 1st Birthday Cake",description:"Bluey and Bingo characters, Australian style house, number 1.",image:"images/cakesicle-flores.jpg",category:"cakes"},
-{id:3,title:"Heart Cake 14 Years",description:"Heart-shaped with red and pink hearts and golden pearls.",image:"images/cakesicle-dinosaurio.jpg",category:"cakes"},
-{id:4,title:"Graduation Anna 2024 Cake",description:"CLASS OF 2024 ANNA, graduation cap, stacked books, flowers.",image:"images/cakesicle-conejito.jpg",category:"specialty"},
-{id:5,title:"Flan with Strawberries and Cream",description:"Flan with fresh strawberries and whipped cream.",image:"images/cakesicle-cumpleaños.jpg",category:"specialty"},
-{id:6,title:"Happy Valentine's Day Cake",description:"Valentine's Day message in black cursive, red hearts.",image:"images/cakesicle-selva.jpg",category:"holiday"},
-{id:7,title:"Halloween Pumpkin Cake",description:"Realistic pumpkin-shaped cake for Halloween.",image:"images/cakesicle-princesa.jpg",category:"holiday"},
-{id:8,title:"Heart Cake Brooke 14",description:"Heart-shaped birthday cake with Happy Birthday Brooke.",image:"images/cakesicle-sirena.jpg",category:"cakes"},
-{id:9,title:"Bento Cake Flork I Love U",description:"Small bento cake with Flork character holding I LOVE U sign.",image:"images/cakesicle-panda.jpg",category:"specialty"},
-{id:10,title:"Mother's Day Pink Flowers Cake",description:"Pink buttercream roses, Happy Mother's Day topper.",image:"images/cakesicle-frozen.jpg",category:"specialty"},
-{id:11,title:"Kids and Grandparents Cake",description:"HAPPY BIRTHDAY GRANDPA message, gold leaf.",image:"images/cakesicle-paw-patrol.jpg",category:"cakes"},
-{id:12,title:"50th Anniversary Cake",description:"50th wedding anniversary, vintage couple photo, golden roses.",image:"images/cakesicle-stitch.jpg",category:"specialty"},
-{id:18,title:"Mermaid Ocean Cake",description:"Ocean/mermaid theme, fish scales in turquoise and purple.",image:"images/cakesicle-batman.jpg",category:"cakes"},
-{id:22,title:"Wedding Tuxedo Cakesicles Set",description:"12 wedding cakesicles, initials S&J, white roses.",image:"images/cakesicle-boda-novios.jpg",category:"specialty"},
-{id:23,title:"Unicorn Cake",description:"Golden horn, ears, multicolored mane, pastel colors.",image:"images/pastel-unicornio.jpg",category:"cakes"},
-{id:24,title:"Giant Macaron Cake",description:"Turquoise giant macaron, small macarons with edible gold.",image:"images/pastel-sirena.jpg",category:"specialty"},
-{id:29,title:"Cocomelon Cake",description:"Watermelon-shaped Cocomelon cake with characters.",image:"images/pastel-cocomelon.jpg",category:"cakes"},
-{id:41,title:"Carrot Cake",description:"Two-tier naked carrot cake, cream cheese frosting.",image:"images/pastel-mario-bros.jpg",category:"cakes"},
-{id:44,title:"Elegant Floral Cupcakes",description:"Dozen cupcakes as realistic flowers with gold leaf.",image:"images/pastel-minecraft.jpg",category:"cupcakes"},
-{id:46,title:"Western Cowboy Cake",description:"Cowboy hat and boots, braided rope texture.",image:"images/pastel-vaquero-cowboy.jpg",category:"cakes"},
-{id:48,title:"Graduation Cake",description:"Graduation cap, diploma, congratulations message.",image:"images/pastel-graduacion.jpg",category:"specialty"},
-{id:52,title:"Jack Skellington Cake",description:"Nightmare Before Christmas style cake.",image:"images/pastel-jack-skellington.jpg",category:"holiday"},
-{id:53,title:"Whiskey Barrel Cake",description:"Cake shaped like a whiskey barrel.",image:"images/pastel-barrica-whiskey.jpg",category:"specialty"},
-{id:54,title:"Oreo Cake",description:"Oreo cookies, cream frosting.",image:"images/pastel-oreo-cumpleaños.jpg",category:"cakes"},
-{id:58,title:"Chocolate Rose Bouquet",description:"Bouquet of roses made entirely of chocolate.",image:"images/ramos-rosas-chocolate.jpg",category:"specialty"},
-{id:68,title:"Strawberries with Chocolate",description:"Chocolate-covered strawberries with elaborate flowers.",image:"images/fresas-chocolate-flores.jpg",category:"specialty"},
-{id:74,title:"Graduation Cupcakes",description:"Graduation cupcakes with caps and diplomas.",image:"images/cupcakes-graduacion.jpg",category:"cupcakes"},
-{id:75,title:"Halloween Cupcakes",description:"Spooky Halloween cupcakes.",image:"images/cupcakes-halloween.jpg",category:"holiday"},
-{id:80,title:"Watermelon Cupcakes 1st Birthday",description:"Watermelon-themed cupcakes for first birthday.",image:"images/cupcakes-sandia-1er-año.jpg",category:"cupcakes"},
-{id:81,title:"Highland Cows Cupcakes",description:"Cupcakes with Highland cow design.",image:"images/cupcakes-vacas-highland.jpg",category:"cupcakes"},
-{id:88,title:"Christmas Chocolate Bombs",description:"Hot chocolate bombs for Christmas.",image:"images/bombas-chocolate-navidad.jpg",category:"holiday"},
-{id:91,title:"Flans with Berries",description:"Vanilla flans with fresh berry sauce.",image:"images/flanes-bayas.jpg",category:"specialty"},
-{id:93,title:"Flork Birthday Cake",description:"Flork character, colorful sprinkles, gold leaf.",image:"images/pastel-flork-cumpleaños.jpg",category:"cakes"},
-{id:94,title:"Apple Crumb Cake",description:"Apple cake with oatmeal cinnamon crumb topping.",image:"images/pastel-manzana-crumb.jpg",category:"pies"},
-{id:95,title:"Apple Lattice Cake",description:"Apple cake with woven lattice crust.",image:"images/pastel-manzana-rejilla.jpg",category:"pies"},
-{id:96,title:"Coconut Cake",description:"Tropical coconut cake with creamy filling.",image:"images/pastel-coco.jpg",category:"pies"},
-{id:97,title:"Pecan Pie",description:"Pecan pie with sticky-sweet filling.",image:"images/pastel-pecana.jpg",category:"pies"}
-];
-
-            
-// ── AUTH ──
-function login(){
-  if(document.getElementById('pi').value===PASS){
-    sessionStorage.setItem('adm','1');
-    document.getElementById('LS').style.display='none';
-    document.getElementById('AP').style.display='block';
-    init();
-  }else{
-    const e=document.getElementById('le');e.style.display='block';
-    document.getElementById('pi').value='';
-    setTimeout(()=>e.style.display='none',2500);
-  }
-}
-function logout(){sessionStorage.removeItem('adm');location.reload();}
-if(sessionStorage.getItem('adm')==='1'){
-  document.addEventListener('DOMContentLoaded',()=>{
-    document.getElementById('LS').style.display='none';
-    document.getElementById('AP').style.display='block';
-    init();
-  });
-  if(document.readyState!=='loading'){
-    document.getElementById('LS').style.display='none';
-    document.getElementById('AP').style.display='block';
-    init();
-  }
-}
-
-// ── DATA ──
-function getC(){
-  try {
-    const raw = JSON.parse(localStorage.getItem(SK)||'[]');
-    return raw.map(p => ({...p, image: resolveImg(p.image)}));
-  } catch(e){ return []; }
-}
-function setC(a){
-  // Strip base64 data URIs before storing - they blow localStorage quota fast
-  // Only keep image URLs/filenames, not raw base64
-  const stripped = a.map(p => {
-    if (p.image && p.image.startsWith('data:')) {
-      // Save the b64 separately under its own key if small enough
-      const imgKey = 'sbd_img_' + p.id;
-      try {
-        localStorage.setItem(imgKey, p.image);
-        return {...p, image: '__local:' + imgKey};
-      } catch(e) {
-        // Image too big for localStorage, store as placeholder
-        return {...p, image: 'images/placeholder.jpg', _imgTooBig: true};
-      }
+function sbFetch(path, opts) {
+  return fetch(SB_URL + path, {
+    ...opts,
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      ...(opts && opts.headers)
     }
-    return p;
   });
-  try {
-    localStorage.setItem(SK, JSON.stringify(stripped));
-  } catch(e) {
-    if (e.name === 'QuotaExceededError' || e.code === 22) {
-      // Try removing oldest items to make room
-      const existing = getC();
-      if (existing.length > 0) {
-        // Emergency: clear old image keys
-        for(let i=0; i<localStorage.length; i++){
-          const k = localStorage.key(i);
-          if(k && k.startsWith('sbd_img_')) { localStorage.removeItem(k); i--; }
-        }
-        try { localStorage.setItem(SK, JSON.stringify(stripped)); return; } catch(e2){}
-      }
-      alert('⚠️ Storage is full! To save more products, use image URLs instead of uploading photos directly. Or go to Dashboard → Export to back up your data and clear storage.');
+}
+
+async function sbUploadImage(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const fname = 'producto-' + Date.now() + '.' + ext;
+  const res = await fetch(SB_URL + '/storage/v1/object/' + SB_BUCKET + '/' + fname, {
+    method: 'POST',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': file.type,
+      'x-upsert': 'true'
+    },
+    body: file
+  });
+  if (!res.ok) {
+    const e = await res.text();
+    throw new Error('Upload failed: ' + e);
+  }
+  return SB_URL + '/storage/v1/object/public/' + SB_BUCKET + '/' + fname;
+}
+
+async function sbSaveProduct(data) {
+  const res = await sbFetch('/rest/v1/productos', {
+    method: 'POST',
+    headers: {'Prefer': 'return=representation'},
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const e = await res.text();
+    throw new Error('DB error: ' + e);
+  }
+  return res.json();
+}
+
+async function sbUpdateProduct(id, data) {
+  const res = await sbFetch('/rest/v1/productos?id=eq.' + id, {
+    method: 'PATCH',
+    headers: {'Prefer': 'return=representation'},
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const e = await res.text();
+    throw new Error('Update error: ' + e);
+  }
+  return res.json();
+}
+
+async function sbDeleteProduct(id) {
+  const res = await sbFetch('/rest/v1/productos?id=eq.' + id, {method: 'DELETE'});
+  if (!res.ok) {
+    const e = await res.text();
+    throw new Error('Delete error: ' + e);
+  }
+}
+
+async function sbLoadProducts() {
+  const res = await sbFetch('/rest/v1/productos?select=*&order=id.asc');
+  if (!res.ok) return [];
+  return res.json();
+}
+
+// ════════════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════════════
+
+function login() {
+  if (document.getElementById('pi').value === PASS) {
+    sessionStorage.setItem('adm', '1');
+    document.getElementById('LS').style.display = 'none';
+    document.getElementById('AP').style.display = 'block';
+    init();
+  } else {
+    const e = document.getElementById('le');
+    e.style.display = 'block';
+    document.getElementById('pi').value = '';
+    setTimeout(() => e.style.display = 'none', 2500);
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('adm');
+  location.reload();
+}
+
+// Check if already logged in
+(function checkAuth() {
+  if (sessionStorage.getItem('adm') === '1') {
+    document.getElementById('LS').style.display = 'none';
+    document.getElementById('AP').style.display = 'block';
+    // Wait for DOM to be ready before initializing
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
     } else {
-      console.error('Save error:', e);
-      alert('Error saving: ' + e.message);
+      init();
     }
   }
-}
-function resolveImg(img) {
-  // Resolve __local: references back to base64 at display time
-  if (img && img.startsWith('__local:')) {
-    const key = img.replace('__local:', '');
-    return localStorage.getItem(key) || 'images/placeholder.jpg';
+})();
+
+// ════════════════════════════════════════════════════════
+// INIT - Load products from Supabase
+// ════════════════════════════════════════════════════════
+
+async function init() {
+  updateSyncStatus('loading', 'Connecting to Supabase...');
+  
+  try {
+    // Load all products from Supabase
+    const rows = await sbLoadProducts();
+    
+    if (rows && rows.length > 0) {
+      // Convert Supabase rows to our product format
+      allProducts = rows.map(row => ({
+        id: row.id,
+        title: row.nombre || '',
+        description: row.descripcion || '',
+        category: row.categoria || 'specialty',
+        categoryLabel: CL[row.categoria] || row.categoria || 'Specialty',
+        price: row.precio || null,
+        image: row.imagen_url || '',
+        badge: row.badge || null,
+        _source: 'supabase',
+        _sbId: row.id
+      }));
+      
+      updateSyncStatus('ok', `Loaded ${allProducts.length} products from Supabase`);
+    } else {
+      allProducts = [];
+      updateSyncStatus('warn', 'No products found in Supabase. Add products to see them here.');
+    }
+    
+  } catch (e) {
+    console.error('Supabase load error:', e);
+    updateSyncStatus('error', 'Failed to connect to Supabase: ' + e.message);
+    toast('Failed to load from cloud: ' + e.message, 'er');
   }
-  return img;
-}
-function getDeleted(){try{return new Set(JSON.parse(localStorage.getItem(DK)||'[]'));}catch{return new Set();}}
-function setDeleted(s){localStorage.setItem(DK,JSON.stringify([...s]));}
-function merged(){
-  const c=getC();const deleted=getDeleted();
-  const r=BASE.filter(p=>!deleted.has(p.id)).map(p=>({...p}));
-  c.forEach(cp=>{const i=r.findIndex(p=>p.id===cp.id);if(i>=0)r[i]={...r[i],...cp,_ov:true};else if(!deleted.has(cp.id))r.push({...cp,_cu:true});});
-  return r;
-}
-function getLog(){try{return JSON.parse(localStorage.getItem(AK)||'[]');}catch{return[];}}
-function topP(n){
-  const l=getLog();const c={};
-  l.filter(e=>e.event==='product_view').forEach(e=>{const id=e.data&&e.data.id;if(id)c[id]=(c[id]||0)+1;});
-  return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n||5);
-}
-function totV(){return getLog().filter(e=>e.event==='product_view').length;}
-
-// ── INIT ──
-function init(){autoLoadOverride().then(()=>{upS();rdash();rl();});}
-
-function sw(t,el){
-  document.querySelectorAll('.at button').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('on'));
-  el.classList.add('on');document.getElementById('t-'+t).classList.add('on');
-  if(t==='cat')rl();if(t==='db'){upS();rdash();}
+  
+  // Update stats and dashboard
+  upS();
+  rdash();
+  
+  // Show catalog tab if needed
+  const currentTab = document.querySelector('.at button.on');
+  if (currentTab && currentTab.dataset.t === 'cat') {
+    rl();
+  }
 }
 
-function upS(){
-  const m=merged();const c=getC();
-  document.getElementById('sT').textContent=m.length;
-  document.getElementById('sC').textContent=c.length;
-  document.getElementById('sV').textContent=totV();
+async function refreshFromSupabase() {
+  await init();
+  if (pg === 'cat') {
+    rl();
+  }
+  toast('Products refreshed from cloud', 'ok');
 }
-function rdash(){
-  const top=topP(8);const ch=document.getElementById('topC');
-  if(!top.length){ch.innerHTML='<p style="opacity:.5;font-size:.83rem">Visit the main site to track views!</p>';return;}
-  const mx=parseInt(top[0][1])||1;const all=merged();
-  ch.innerHTML=top.map(([id,cnt])=>{
-    const p=all.find(x=>x.id===parseInt(id));
-    const nm=p?p.title:'#'+id;
-    return '<div class="mr"><div class="mn" title="'+h(nm)+'">'+h(nm.length>22?nm.slice(0,22)+'…':nm)+'</div><div class="mt"><div class="mf" style="width:'+Math.round(parseInt(cnt)/mx*100)+'%"></div></div><div class="mc">'+cnt+'</div></div>';
+
+function updateSyncStatus(type, message) {
+  const statusEl = document.getElementById('syncStatus');
+  if (!statusEl) return;
+  
+  let icon = '';
+  let color = '';
+  
+  switch (type) {
+    case 'ok':
+      icon = '<i class="fas fa-check-circle" style="color:#2ed573"></i>';
+      color = '#2ed573';
+      break;
+    case 'error':
+      icon = '<i class="fas fa-exclamation-circle" style="color:#FF4757"></i>';
+      color = '#FF4757';
+      break;
+    case 'warn':
+      icon = '<i class="fas fa-exclamation-triangle" style="color:#FFA502"></i>';
+      color = '#FFA502';
+      break;
+    default:
+      icon = '<i class="fas fa-spinner fa-spin" style="color:#FF9EB5"></i>';
+      color = '#FF9EB5';
+  }
+  
+  statusEl.innerHTML = `<p>${icon} ${message}</p>`;
+  statusEl.style.color = color;
+}
+
+// ════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════
+
+function sw(t, el) {
+  document.querySelectorAll('.at button').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.tp').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('t-' + t).classList.add('on');
+  
+  if (t === 'cat') {
+    // Show loading
+    document.getElementById('catalogLoading').style.display = 'block';
+    document.getElementById('filtersContainer').style.display = 'none';
+    document.getElementById('pL').innerHTML = '';
+    document.getElementById('pg').innerHTML = '';
+    
+    // Load products if not loaded
+    if (allProducts.length === 0) {
+      sbLoadProducts().then(rows => {
+        if (rows && rows.length > 0) {
+          allProducts = rows.map(row => ({
+            id: row.id,
+            title: row.nombre || '',
+            description: row.descripcion || '',
+            category: row.categoria || 'specialty',
+            categoryLabel: CL[row.categoria] || row.categoria || 'Specialty',
+            price: row.precio || null,
+            image: row.imagen_url || '',
+            badge: row.badge || null,
+            _source: 'supabase',
+            _sbId: row.id
+          }));
+        }
+        document.getElementById('catalogLoading').style.display = 'none';
+        document.getElementById('filtersContainer').style.display = 'flex';
+        rl();
+      }).catch(e => {
+        document.getElementById('catalogLoading').innerHTML = '<p style="color:#FF4757">Error loading products</p>';
+      });
+    } else {
+      document.getElementById('catalogLoading').style.display = 'none';
+      document.getElementById('filtersContainer').style.display = 'flex';
+      rl();
+    }
+  }
+  
+  if (t === 'db') {
+    upS();
+    rdash();
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════════════════════
+
+function upS() {
+  const total = allProducts.length;
+  const supabaseProducts = allProducts.filter(p => p._source === 'supabase').length;
+  const views = getTotalViews();
+  
+  document.getElementById('sT').textContent = total;
+  document.getElementById('sC').textContent = supabaseProducts;
+  document.getElementById('sV').textContent = views;
+}
+
+function getTotalViews() {
+  try {
+    const log = JSON.parse(localStorage.getItem('sbd_analytics') || '[]');
+    return log.filter(e => e.event === 'product_view').length;
+  } catch (e) {
+    return 0;
+  }
+}
+
+function rdash() {
+  const top = getTopProducts(8);
+  const ch = document.getElementById('topC');
+  
+  if (!top.length) {
+    ch.innerHTML = '<p style="opacity:.5;font-size:.83rem">Visit the main site to track views!</p>';
+    return;
+  }
+  
+  const mx = parseInt(top[0].views) || 1;
+  
+  ch.innerHTML = top.map(item => {
+    const p = allProducts.find(x => x.id === item.id);
+    const nm = p ? p.title : '#' + item.id;
+    return '<div class="mr"><div class="mn" title="' + h(nm) + '">' + h(nm.length > 22 ? nm.slice(0, 22) + '…' : nm) + '</div><div class="mt"><div class="mf" style="width:' + Math.round(parseInt(item.views) / mx * 100) + '%"></div></div><div class="mc">' + item.views + '</div></div>';
   }).join('');
 }
 
-// ── GROQ ──
-async function groq(msgs,tok){
-  tok=tok||300;
-  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+GK},
-    body:JSON.stringify({model:GM,max_tokens:tok,temperature:0.7,messages:msgs})
-  });
-  const d=await r.json();
-  if(d.choices&&d.choices[0])return d.choices[0].message.content;
-  throw new Error(d.error&&d.error.message||'Groq error');
-}
-
-// ── AI ANALYZE IMAGE ──
-async function aiAnalyzeImage(){
-  const nm=document.getElementById('fN').value.trim();
-  const cat=document.getElementById('fC').value;
-  const imgHint=upFileName||document.getElementById('fI').value.trim()||'';
-  const btn=document.getElementById('aiAb');const ico=document.getElementById('aiAi');
-  btn.disabled=true;ico.className='fas fa-spinner spin';
-  try{
-    const isDrink=cat==='drinks';
-    const productType=isDrink?'drink/beverage':'bakery dessert';
-    const priceGuide=isDrink?'$8–$18 for specialty drinks in New York':'$35–$120 for custom desserts in New York';
-    const badgeGuide=isDrink?'"new" for unique seasonal drinks, "best-seller" for popular drinks like hot chocolate or frappuccino, "limited" for holiday drinks, "" for standard':'\"best-seller\" for universally popular items (chocolate, red velvet, unicorn), \"limited\" for holiday/seasonal, \"new\" for unique items, \"\" for standard';
-    const prompt='You are a product expert for Sweets by Dulce in New York. The shop sells custom desserts AND specialty drinks.\n\nProduct type: '+productType+'\nCategory: '+(CL[cat]||cat)+'\nProduct name typed: "'+(nm||'(none)')+'"\nImage filename hint: "'+imgHint+'"\n\nIMPORTANT: This is a '+productType+'. Do NOT describe it as a cake or dessert if the category is Drinks.\n\nBased on the category and image filename, write an accurate description.\n- For drinks: describe the beverage (flavor, texture, temperature, garnish, occasion)\n- For desserts: describe the cake/cupcake (flavors, decoration, occasion)\n\nAlso suggest:\n1. A fitting product name based on the image filename and category\n2. A badge: '+badgeGuide+'\n3. A competitive price ('+priceGuide+')\n\nRespond ONLY valid JSON (no markdown, no extra text):\n{"description":"2-3 sentence vivid description accurate to the product type","price":65,"price_note":"brief reason","name_suggestion":"product name based on image and category","badge":"best-seller|limited|new|"}';
-    const reply=await groq([{role:'user',content:prompt}],300);
-    let j;try{j=JSON.parse(reply.replace(/```json?/g,'').replace(/```/g,'').trim());}
-    catch{const dm=reply.match(/"description"\s*:\s*"([^"]+)"/);const pm=reply.match(/"price"\s*:\s*(\d+)/);const nm2=reply.match(/"name_suggestion"\s*:\s*"([^"]+)"/);const bm=reply.match(/"badge"\s*:\s*"([^"]*)"/);
-      j={description:dm?dm[1]:reply.slice(0,200),price:pm?parseInt(pm[1]):65,price_note:'NY market rate',name_suggestion:nm2?nm2[1]:'',badge:bm?bm[1]:''};}
-    aiD=j;
-    document.getElementById('aiRd').textContent=j.description||'';
-    document.getElementById('aiRp').textContent='$'+(j.price||'—')+' starting price';
-    const badgeLabel={'new':'🆕 New','best-seller':'⭐ Best Seller','limited':'✨ Limited Edition'}[j.badge]||'';
-    document.getElementById('aiRm').textContent=(j.price_note?'💡 '+j.price_note:'')+(j.name_suggestion?' | 📝 '+j.name_suggestion:'')+(badgeLabel?' | 🏷️ '+badgeLabel:'');
-    document.getElementById('aiR').classList.add('on');
-    toast('🤖 AI suggestion ready!','ok');
-  }catch(e){toast('AI error: '+e.message.slice(0,50),'er');}
-  btn.disabled=false;ico.className='fas fa-robot';
-}
-
-function useAI(){
-  if(!aiD)return;
-  if(aiD.description)document.getElementById('fD').value=aiD.description;
-  if(aiD.price)document.getElementById('fP').value=aiD.price;
-  if(aiD.name_suggestion&&!document.getElementById('fN').value.trim())document.getElementById('fN').value=aiD.name_suggestion;
-  if(aiD.badge)document.getElementById('fB').value=aiD.badge;
-  toast('✅ Applied!','ok');
-}
-
-// ── GROQ for Edit Modal ──
-let editAiD=null;
-async function aiEditGroq(){
-  const nm=document.getElementById('mN').value.trim();
-  const cat=document.getElementById('mC').value;
-  const btn=document.getElementById('eAiAb');const ico=document.getElementById('eAiAi');
-  btn.disabled=true;ico.className='fas fa-spinner spin';
-  try{
-    const isDrink=cat==='drinks';
-    const productType=isDrink?'drink/beverage':'bakery dessert';
-    const priceGuide=isDrink?'$8–$18 for specialty drinks':'$35–$120 for custom desserts';
-    const prompt='You are a product expert for Sweets by Dulce in New York. The shop sells custom desserts AND specialty drinks.\n\nProduct type: '+productType+'\nCategory: '+(CL[cat]||cat)+'\nProduct name: "'+(nm||'(none)')+'"\n\nIMPORTANT: This is a '+productType+'. Do NOT describe it as a cake if the category is Drinks.\n- For drinks: describe flavor, texture, temperature, garnish, occasion\n- For desserts: describe flavors, decoration, occasion\n\nPrice guide: '+priceGuide+'\n\nRespond ONLY valid JSON (no markdown):\n{"description":"2-3 sentence description accurate to the product type","price":65,"price_note":"brief reason","name_suggestion":"suggested name if current one is unclear"}';
-    const reply=await groq([{role:'user',content:prompt}],250);
-    let j;try{j=JSON.parse(reply.replace(/```json?/g,'').replace(/```/g,'').trim());}
-    catch{const dm=reply.match(/"description"\s*:\s*"([^"]+)"/);const pm=reply.match(/"price"\s*:\s*(\d+)/);const nm2=reply.match(/"name_suggestion"\s*:\s*"([^"]+)"/);
-      j={description:dm?dm[1]:reply.slice(0,200),price:pm?parseInt(pm[1]):65,price_note:'NY market rate',name_suggestion:nm2?nm2[1]:''};}
-    editAiD=j;
-    document.getElementById('eAiRd').textContent=j.description||'';
-    document.getElementById('eAiRp').textContent='$'+(j.price||'—')+' starting price';
-    document.getElementById('eAiRm').textContent=(j.price_note?'💡 '+j.price_note:'')+(j.name_suggestion?' | 📝 '+j.name_suggestion:'');
-    document.getElementById('eAiR').style.display='block';
-    toast('🤖 AI suggestion ready!','ok');
-  }catch(e){toast('AI error: '+e.message.slice(0,50),'er');}
-  btn.disabled=false;ico.className='fas fa-robot';
-}
-function useAIEdit(){
-  if(!editAiD)return;
-  if(editAiD.description)document.getElementById('mD').value=editAiD.description;
-  if(editAiD.price)document.getElementById('mP').value=editAiD.price;
-  if(editAiD.name_suggestion&&!document.getElementById('mN').value.trim())document.getElementById('mN').value=editAiD.name_suggestion;
-  document.getElementById('eAiR').style.display='none';
-  toast('✅ Applied!','ok');
-}
-
-// ── AI MANAGER ──
-async function runMgr(){
-  const btn=document.getElementById('aMb');const ico=document.getElementById('aMi');const res=document.getElementById('aMr');
-  btn.disabled=true;ico.className='fas fa-spinner spin';res.style.display='block';res.textContent='🤖 Analyzing…';
-  try{
-    const top=topP(5);const all=merged();
-    const topN=top.map(([id,cnt])=>{const p=all.find(x=>x.id===parseInt(id));return (p?p.title:'#'+id)+' ('+cnt+')'}).join(', ')||'no data yet';
-    const prompt='You are a bakery business consultant for Sweets by Dulce in New York.\n\nStats:\n- Total products: '+all.length+'\n- Custom products: '+getC().length+'\n- Total views tracked: '+totV()+'\n- Most viewed: '+topN+'\n\nGive 3-4 specific, actionable recommendations to increase sales. Use emojis. Max 100 words.';
-    const reply=await groq([{role:'user',content:prompt}],200);
-    res.innerHTML=reply.replace(/\n/g,'<br>');
-  }catch(e){res.textContent='Could not connect. Check your internet.';}
-  btn.disabled=false;ico.className='fas fa-magic';
-}
-
-// ── IMAGE MATCHER ──
-async function runImgMatch(){
-  const raw=document.getElementById('imgList').value.trim();
-  const files=raw.split('\n').map(s=>s.trim()).filter(s=>s&&(s.endsWith('.jpg')||s.endsWith('.png')||s.endsWith('.webp')));
-  if(!files.length){toast('Paste at least one filename','er');return;}
-  const btn=document.getElementById('matchBtn');const ico=document.getElementById('matchIco');const res=document.getElementById('matchResult');
-  btn.disabled=true;ico.className='fas fa-spinner spin';res.style.display='block';
-  res.innerHTML='🤖 Groq AI is analyzing '+files.length+' image filenames…';
-  matchData=[];
-  try{
-    const all=merged();
-    const prodList=all.map(p=>'['+p.id+'] '+p.title+' ('+p.category+'): '+p.description).slice(0,60).join('\n');
-    const prompt='You are a bakery product expert. Match each image filename to the most fitting product from the list.\n\nIMAGE FILES:\n'+files.join('\n')+'\n\nPRODUCT LIST:\n'+prodList+'\n\nFor each image, pick the best matching product ID. Respond ONLY as valid JSON array (no markdown):\n[{"file":"filename.jpg","id":1,"confidence":"high/medium/low","reason":"brief reason"}]\n\nIf no good match, use id:null.';
-    const reply=await groq([{role:'user',content:prompt}],800);
-    let arr;try{arr=JSON.parse(reply.replace(/```json?/g,'').replace(/```/g,'').trim());}
-    catch{arr=[];toast('AI returned unexpected format','er');}
-    matchData=arr;
-    const rows=arr.map(m=>{
-      const p=m.id?all.find(x=>x.id===m.id):null;
-      const conf={'high':'🟢','medium':'🟡','low':'🔴'}[m.confidence]||'⚪';
-      return '<div style="padding:.4rem 0;border-bottom:1px solid rgba(255,158,181,.2)">'+
-        conf+' <strong>'+h(m.file)+'</strong> → '+(p?'<em>'+h(p.title)+'</em>':'<em style="opacity:.5">No match</em>')+
-        ' <small style="opacity:.6">('+h(m.reason||'')+')</small></div>';
+function getTopProducts(n) {
+  try {
+    const log = JSON.parse(localStorage.getItem('sbd_analytics') || '[]');
+    const ct = {};
+    log.filter(e => e.event === 'product_view').forEach(e => {
+      const id = e.data && e.data.id;
+      if (id) ct[id] = (ct[id] || 0) + 1;
     });
-    res.innerHTML=rows.join('')||'<p style="opacity:.5">No matches found</p>';
-    if(arr.filter(m=>m.id).length>0)document.getElementById('applyMatchBtn').style.display='flex';
-  }catch(e){res.innerHTML='❌ Error: '+e.message;}
-  btn.disabled=false;ico.className='fas fa-magic';
+    return Object.entries(ct)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, n || 5)
+      .map(pair => ({ id: parseInt(pair[0]), views: pair[1] }));
+  } catch (e) {
+    return [];
+  }
 }
 
-function applyMatches(){
-  const all=merged();const c=getC();let count=0;
-  matchData.filter(m=>m.id&&m.file).forEach(m=>{
-    const prod=all.find(p=>p.id===m.id);if(!prod)return;
-    const newImg='images/'+m.file;
-    const ci=c.findIndex(p=>p.id===m.id);
-    if(ci>=0){c[ci].image=newImg;}
-    else{c.push({...prod,image:newImg,_custom:true});}
-    count++;
+// ════════════════════════════════════════════════════════
+// GROQ AI
+// ════════════════════════════════════════════════════════
+
+async function groq(msgs, tok) {
+  tok = tok || 300;
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + GK
+    },
+    body: JSON.stringify({
+      model: GM,
+      max_tokens: tok,
+      temperature: 0.7,
+      messages: msgs
+    })
   });
-  setC(c);rl();toast('✅ Applied '+count+' image matches!','ok');
-  document.getElementById('applyMatchBtn').style.display='none';
+  const d = await r.json();
+  if (d.choices && d.choices[0]) return d.choices[0].message.content;
+  throw new Error(d.error && d.error.message || 'Groq error');
 }
 
-// ── FILE DROP ──
-let upFileName='';
-function onDrop(ev){ev.preventDefault();document.getElementById('dz').classList.remove('over');const f=ev.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))loadF(f);}
-function onFile(ev){const f=ev.target.files[0];if(f)loadF(f);}
-function loadF(f){
-  upFileName=f.name||'';
-  window._pendingUploadFile=f; // Store for Supabase upload on save
-  const r=new FileReader();
-  r.onload=function(e){
-    upB64=e.target.result;document.getElementById('fImg').value=upB64;
-    const p=document.getElementById('dp2');p.src=upB64;p.style.display='block';
+// ════════════════════════════════════════════════════════
+// AI ANALYZE IMAGE
+// ════════════════════════════════════════════════════════
+
+async function aiAnalyzeImage() {
+  const nm = document.getElementById('fN').value.trim();
+  const cat = document.getElementById('fC').value;
+  const imgHint = upFileName || document.getElementById('fI').value.trim() || '';
+  const btn = document.getElementById('aiAb');
+  const ico = document.getElementById('aiAi');
+  
+  btn.disabled = true;
+  ico.className = 'fas fa-spinner spin';
+  
+  try {
+    const isDrink = cat === 'drinks';
+    const productType = isDrink ? 'drink/beverage' : 'bakery dessert';
+    const priceGuide = isDrink ? '$8-$18 for specialty drinks in New York' : '$35-$120 for custom desserts in New York';
+    
+    const prompt = 'You are a product expert for Sweets by Dulce in New York. The shop sells custom desserts AND specialty drinks.\n\n' +
+      'Product type: ' + productType + '\n' +
+      'Category: ' + (CL[cat] || cat) + '\n' +
+      'Product name typed: "' + (nm || '(none)') + '"\n' +
+      'Image filename hint: "' + imgHint + '"\n\n' +
+      'Based on the category and image filename, write an accurate description.\n\n' +
+      'Respond ONLY valid JSON (no markdown, no extra text):\n' +
+      '{"description":"2-3 sentence vivid description","price":65,"badge":"best-seller|limited|new|"}';
+    
+    const reply = await groq([{role: 'user', content: prompt}], 300);
+    let j;
+    
+    try {
+      j = JSON.parse(reply.replace(/```json?/g, '').replace(/```/g, '').trim());
+    } catch {
+      const dm = reply.match(/"description"\s*:\s*"([^"]+)"/);
+      const pm = reply.match(/"price"\s*:\s*(\d+)/);
+      const bm = reply.match(/"badge"\s*:\s*"([^"]*)"/);
+      j = {
+        description: dm ? dm[1] : reply.slice(0, 200),
+        price: pm ? parseInt(pm[1]) : 65,
+        badge: bm ? bm[1] : ''
+      };
+    }
+    
+    aiD = j;
+    document.getElementById('aiRd').textContent = j.description || '';
+    document.getElementById('aiRp').textContent = '$' + (j.price || '—') + ' starting price';
+    const badgeLabel = {'new': 'New', 'best-seller': 'Best Seller', 'limited': 'Limited Edition'}[j.badge] || '';
+    document.getElementById('aiRm').textContent = badgeLabel ? 'Badge: ' + badgeLabel : '';
+    document.getElementById('aiR').classList.add('on');
+    toast('AI suggestion ready!', 'ok');
+  } catch (e) {
+    toast('AI error: ' + e.message.slice(0, 50), 'er');
+  }
+  
+  btn.disabled = false;
+  ico.className = 'fas fa-robot';
+}
+
+function useAI() {
+  if (!aiD) return;
+  if (aiD.description) document.getElementById('fD').value = aiD.description;
+  if (aiD.price) document.getElementById('fP').value = aiD.price;
+  if (aiD.badge) document.getElementById('fB').value = aiD.badge;
+  toast('Applied!', 'ok');
+}
+
+// ════════════════════════════════════════════════════════
+// GROQ for Edit Modal
+// ════════════════════════════════════════════════════════
+
+let editAiD = null;
+
+async function aiEditGroq() {
+  const nm = document.getElementById('mN').value.trim();
+  const cat = document.getElementById('mC').value;
+  const btn = document.getElementById('eAiAb');
+  const ico = document.getElementById('eAiAi');
+  
+  btn.disabled = true;
+  ico.className = 'fas fa-spinner spin';
+  
+  try {
+    const prompt = 'You are a product expert for Sweets by Dulce in New York.\n\n' +
+      'Product name: "' + (nm || '(none)') + '"\n' +
+      'Category: ' + (CL[cat] || cat) + '\n\n' +
+      'Respond ONLY valid JSON:\n' +
+      '{"description":"2-3 sentence description","price":65}';
+    
+    const reply = await groq([{role: 'user', content: prompt}], 250);
+    let j;
+    
+    try {
+      j = JSON.parse(reply.replace(/```json?/g, '').replace(/```/g, '').trim());
+    } catch {
+      const dm = reply.match(/"description"\s*:\s*"([^"]+)"/);
+      const pm = reply.match(/"price"\s*:\s*(\d+)/);
+      j = {
+        description: dm ? dm[1] : reply.slice(0, 200),
+        price: pm ? parseInt(pm[1]) : 65
+      };
+    }
+    
+    editAiD = j;
+    document.getElementById('eAiRd').textContent = j.description || '';
+    document.getElementById('eAiRp').textContent = '$' + (j.price || '—') + ' starting price';
+    document.getElementById('eAiR').style.display = 'block';
+    toast('AI suggestion ready!', 'ok');
+  } catch (e) {
+    toast('AI error: ' + e.message.slice(0, 50), 'er');
+  }
+  
+  btn.disabled = false;
+  ico.className = 'fas fa-robot';
+}
+
+function useAIEdit() {
+  if (!editAiD) return;
+  if (editAiD.description) document.getElementById('mD').value = editAiD.description;
+  if (editAiD.price) document.getElementById('mP').value = editAiD.price;
+  document.getElementById('eAiR').style.display = 'none';
+  toast('Applied!', 'ok');
+}
+
+// ════════════════════════════════════════════════════════
+// AI MANAGER
+// ════════════════════════════════════════════════════════
+
+async function runMgr() {
+  const btn = document.getElementById('aMb');
+  const ico = document.getElementById('aMi');
+  const res = document.getElementById('aMr');
+  
+  btn.disabled = true;
+  ico.className = 'fas fa-spinner spin';
+  res.style.display = 'block';
+  res.textContent = 'Analyzing…';
+  
+  try {
+    const top = getTopProducts(5);
+    const topN = top.map(item => {
+      const p = allProducts.find(x => x.id === item.id);
+      return (p ? p.title : '#' + item.id) + ' (' + item.views + ')';
+    }).join(', ') || 'no data yet';
+    
+    const prompt = 'You are a bakery business consultant for Sweets by Dulce in New York.\n\n' +
+      'Stats:\n' +
+      '- Total products: ' + allProducts.length + '\n' +
+      '- Total views tracked: ' + getTotalViews() + '\n' +
+      '- Most viewed: ' + topN + '\n\n' +
+      'Give 3-4 specific, actionable recommendations to increase sales. Use emojis. Max 100 words.';
+    
+    const reply = await groq([{role: 'user', content: prompt}], 200);
+    res.innerHTML = reply.replace(/\n/g, '<br>');
+  } catch (e) {
+    res.textContent = 'Could not connect. Check your internet.';
+  }
+  
+  btn.disabled = false;
+  ico.className = 'fas fa-magic';
+}
+
+// ════════════════════════════════════════════════════════
+// IMAGE MATCHER
+// ════════════════════════════════════════════════════════
+
+async function runImgMatch() {
+  const raw = document.getElementById('imgList').value.trim();
+  const files = raw.split('\n').map(s => s.trim()).filter(s => s && (s.endsWith('.jpg') || s.endsWith('.png') || s.endsWith('.webp')));
+  
+  if (!files.length) {
+    toast('Paste at least one filename', 'er');
+    return;
+  }
+  
+  const btn = document.getElementById('matchBtn');
+  const ico = document.getElementById('matchIco');
+  const res = document.getElementById('matchResult');
+  
+  btn.disabled = true;
+  ico.className = 'fas fa-spinner spin';
+  res.style.display = 'block';
+  res.innerHTML = 'Groq AI is analyzing ' + files.length + ' image filenames…';
+  
+  matchData = [];
+  
+  try {
+    const prodList = allProducts.slice(0, 60).map(p => 
+      '[' + p.id + '] ' + p.title + ' (' + p.category + '): ' + p.description
+    ).join('\n');
+    
+    const prompt = 'You are a bakery product expert. Match each image filename to the most fitting product from the list.\n\n' +
+      'IMAGE FILES:\n' + files.join('\n') + '\n\n' +
+      'PRODUCT LIST:\n' + prodList + '\n\n' +
+      'For each image, pick the best matching product ID. Respond ONLY as valid JSON array (no markdown):\n' +
+      '[{"file":"filename.jpg","id":1,"confidence":"high/medium/low","reason":"brief reason"}]\n\n' +
+      'If no good match, use id:null.';
+    
+    const reply = await groq([{role: 'user', content: prompt}], 800);
+    let arr;
+    
+    try {
+      arr = JSON.parse(reply.replace(/```json?/g, '').replace(/```/g, '').trim());
+    } catch {
+      arr = [];
+      toast('AI returned unexpected format', 'er');
+    }
+    
+    matchData = arr;
+    
+    const rows = arr.map(m => {
+      const p = m.id ? allProducts.find(x => x.id === m.id) : null;
+      const conf = {'high': 'High', 'medium': 'Medium', 'low': 'Low'}[m.confidence] || '—';
+      return '<div style="padding:.4rem 0;border-bottom:1px solid rgba(255,158,181,.2)">' +
+        '<strong>' + h(m.file) + '</strong> → ' + (p ? '<em>' + h(p.title) + '</em>' : '<em style="opacity:.5">No match</em>') +
+        ' <small style="opacity:.6">(' + conf + ')</small></div>';
+    });
+    
+    res.innerHTML = rows.join('') || '<p style="opacity:.5">No matches found</p>';
+    
+    if (arr.filter(m => m.id).length > 0) {
+      document.getElementById('applyMatchBtn').style.display = 'flex';
+    }
+  } catch (e) {
+    res.innerHTML = 'Error: ' + e.message;
+  }
+  
+  btn.disabled = false;
+  ico.className = 'fas fa-magic';
+}
+
+async function applyMatches() {
+  let count = 0;
+  
+  for (const m of matchData.filter(m => m.id && m.file)) {
+    const idx = allProducts.findIndex(p => p.id === m.id);
+    
+    if (idx >= 0) {
+      const newImg = 'images/' + m.file;
+      allProducts[idx].image = newImg;
+      
+      // Update in Supabase
+      try {
+        await sbUpdateProduct(allProducts[idx]._sbId, {imagen_url: newImg});
+        count++;
+      } catch (e) {
+        console.error('Failed to update image:', e);
+      }
+    }
+  }
+  
+  toast('Applied ' + count + ' image matches!', 'ok');
+  document.getElementById('applyMatchBtn').style.display = 'none';
+  rl();
+}
+
+// ════════════════════════════════════════════════════════
+// FILE DROP
+// ════════════════════════════════════════════════════════
+
+function onDrop(ev) {
+  ev.preventDefault();
+  document.getElementById('dz').classList.remove('over');
+  const f = ev.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) loadF(f);
+}
+
+function onFile(ev) {
+  const f = ev.target.files[0];
+  if (f) loadF(f);
+}
+
+function loadF(f) {
+  upFileName = f.name || '';
+  window._pendingUploadFile = f;
+  
+  const r = new FileReader();
+  r.onload = function(e) {
+    upB64 = e.target.result;
+    document.getElementById('fImg').value = upB64;
+    const p = document.getElementById('dp2');
+    p.src = upB64;
+    p.style.display = 'block';
     document.getElementById('dz').classList.add('hi');
-    document.getElementById('aiAb').disabled=false;
-    toast('📷 Photo ready! Will upload to cloud on save.','ok');
+    document.getElementById('aiAb').disabled = false;
+    toast('Photo ready! Will upload to cloud on save.', 'ok');
   };
   r.readAsDataURL(f);
 }
 
-// ── SAVE ──
-async function saveProd(){
-  const nm=document.getElementById('fN').value.trim();
-  const cat=document.getElementById('fC').value;
-  if(!nm){toast('Enter a product name','er');return;}
-  if(!cat){toast('Select a category','er');return;}
+// ════════════════════════════════════════════════════════
+// SAVE PRODUCT
+// ════════════════════════════════════════════════════════
 
-  const saveBtn=document.querySelector('.sb');
-  if(saveBtn){saveBtn.disabled=true;saveBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';}
+async function saveProd() {
+  const nm = document.getElementById('fN').value.trim();
+  const cat = document.getElementById('fC').value;
+  
+  if (!nm) {
+    toast('Enter a product name', 'er');
+    return;
+  }
+  
+  if (!cat) {
+    toast('Select a category', 'er');
+    return;
+  }
 
-  let imageUrl=document.getElementById('fI').value.trim()||document.getElementById('fImg').value||FB;
+  const saveBtn = document.querySelector('.sb');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  }
 
-  // If there's a local file queued (from drop zone), upload to Supabase Storage
-  if(window._pendingUploadFile){
-    try{
-      toast('⏫ Uploading image to cloud...','ok');
-      imageUrl=await sbUploadImage(window._pendingUploadFile);
-      window._pendingUploadFile=null;
-      toast('✅ Image uploaded!','ok');
-    }catch(e){
-      toast('⚠️ Image upload failed, saving without cloud image','er');
+  let imageUrl = document.getElementById('fI').value.trim() || FB;
+
+  // If there's a local file queued, upload to Supabase Storage
+  if (window._pendingUploadFile) {
+    try {
+      toast('Uploading image to cloud...', 'ok');
+      imageUrl = await sbUploadImage(window._pendingUploadFile);
+      window._pendingUploadFile = null;
+      toast('Image uploaded!', 'ok');
+    } catch (e) {
+      toast('Image upload failed, saving without image', 'er');
     }
   }
 
-  // Save to Supabase DB
-  let sbId=null;
-  try{
-    const rows=await sbSaveProduct({
-      nombre:nm,
-      descripcion:document.getElementById('fD').value.trim(),
-      categoria:cat,
-      precio:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,
-      imagen_url:imageUrl.startsWith('data:')?null:imageUrl
+  // Save to Supabase
+  try {
+    const rows = await sbSaveProduct({
+      nombre: nm,
+      descripcion: document.getElementById('fD').value.trim(),
+      categoria: cat,
+      precio: document.getElementById('fP').value ? parseFloat(document.getElementById('fP').value) : null,
+      imagen_url: imageUrl.startsWith('data:') ? null : imageUrl,
+      badge: document.getElementById('fB').value || null
     });
-    if(rows&&rows[0])sbId=rows[0].id;
-    toast('☁️ Saved to Supabase!','ok');
-  }catch(e){
-    toast('⚠️ Cloud save failed — saved locally only','er');
+    
+    // Add to local products array
+    if (rows && rows[0]) {
+      const newProduct = {
+        id: rows[0].id,
+        title: nm,
+        description: document.getElementById('fD').value.trim(),
+        category: cat,
+        categoryLabel: CL[cat] || cat,
+        price: document.getElementById('fP').value ? parseFloat(document.getElementById('fP').value) : null,
+        badge: document.getElementById('fB').value || null,
+        image: imageUrl,
+        _source: 'supabase',
+        _sbId: rows[0].id
+      };
+      allProducts.push(newProduct);
+    }
+    
+    toast('Saved to Supabase!', 'ok');
+  } catch (e) {
+    toast('Cloud save failed: ' + e.message, 'er');
   }
 
-  // Also save to localStorage as fallback
-  const c=getC();
-  c.push({id:sbId||Date.now(),title:nm,description:document.getElementById('fD').value.trim(),category:cat,categoryLabel:CL[cat]||cat,price:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,badge:document.getElementById('fB').value||null,image:imageUrl,_custom:true,_added:Date.now(),_sbId:sbId});
-  setC(c);
-
-  ['fN','fD','fP','fI','fImg'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('fC').value='';document.getElementById('fB').value='';
-  document.getElementById('dp2').style.display='none';document.getElementById('dz').classList.remove('hi');
-  document.getElementById('aiAb').disabled=true;document.getElementById('aiR').classList.remove('on');
-  upB64=null;aiD=null;upFileName='';
-  if(saveBtn){saveBtn.disabled=false;saveBtn.innerHTML='<i class="fas fa-save"></i> Save Product';}
-  upS();toast('✅ Product saved!','ok');
-  sw('cat',document.querySelector('[data-t="cat"]'));
+  // Clear form
+  ['fN', 'fD', 'fP', 'fI', 'fImg'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fC').value = '';
+  document.getElementById('fB').value = '';
+  document.getElementById('dp2').style.display = 'none';
+  document.getElementById('dz').classList.remove('hi');
+  document.getElementById('aiAb').disabled = true;
+  document.getElementById('aiR').classList.remove('on');
+  
+  upB64 = null;
+  aiD = null;
+  upFileName = '';
+  
+  if (saveBtn) {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Product';
+  }
+  
+  upS();
+  rl();
+  sw('cat', document.querySelector('[data-t="cat"]'));
 }
 
-// ── LIST ──
-function rl(){
-  const q=(document.getElementById('pS').value||'').toLowerCase().trim();
-  const cf=document.getElementById('pCF').value;const sf=document.getElementById('pSF').value;
-  const cids=new Set(getC().map(p=>p.id));
-  let list=merged();
-  if(q)list=list.filter(p=>(p.title||'').toLowerCase().includes(q)||(p.description||'').toLowerCase().includes(q));
-  if(cf)list=list.filter(p=>p.category===cf);
-  if(sf==='custom')list=list.filter(p=>cids.has(p.id));
-  if(sf==='base')list=list.filter(p=>!cids.has(p.id));
-  const tot=list.length;const pgs=Math.max(1,Math.ceil(tot/PGS));
-  if(pg>pgs)pg=1;
-  const paged=list.slice((pg-1)*PGS,pg*PGS);
-  const el=document.getElementById('pL');
-  if(!paged.length){el.innerHTML='<div class="empty"><div class="ei">🔍</div><p>No products found</p></div>';}
-  else el.innerHTML=paged.map(p=>{
-    const isC=cids.has(p.id);
-    return '<div class="pc'+(isC?' cp':'')+'">'+
-      '<img class="pi" src="'+h(p.image||FB)+'" onerror="this.src=\''+FB+'\'" alt="">'+
-      '<div class="pn"><div class="pna">'+h(p.title)+'</div><div class="pm">'+
-        '<span class="mk">'+h(CL[p.category]||p.category)+'</span>'+
-        (p.price?'<span class="mk pr">$'+p.price+'</span>':'')+
-        (isC?'<span class="mk cu">✏️ Edited</span>':'')+
-      '</div></div>'+
-      '<div class="pb"><button class="ab2 ed" onclick="openEdit('+p.id+')" title="Edit"><i class="fas fa-pen"></i></button>'+
-      '<button class="ab2 dl" onclick="delP('+p.id+')" title="Delete"><i class="fas fa-trash"></i></button>'+
-      '</div></div>';
-  }).join('');
+// ════════════════════════════════════════════════════════
+// LIST / CATALOG
+// ════════════════════════════════════════════════════════
+
+function debouncedRL() {
+  clearTimeout(window._rlTimeout);
+  window._rlTimeout = setTimeout(rl, 300);
+}
+
+function rl() {
+  const q = (document.getElementById('pS').value || '').toLowerCase().trim();
+  const cf = document.getElementById('pCF').value;
+  
+  let list = [...allProducts];
+  
+  // Apply filters
+  if (q) {
+    list = list.filter(p => 
+      (p.title || '').toLowerCase().includes(q) || 
+      (p.description || '').toLowerCase().includes(q)
+    );
+  }
+  
+  if (cf) {
+    list = list.filter(p => p.category === cf);
+  }
+  
+  // Pagination
+  const tot = list.length;
+  const pgs = Math.max(1, Math.ceil(tot / PGS));
+  if (pg > pgs) pg = 1;
+  
+  const paged = list.slice((pg - 1) * PGS, pg * PGS);
+  const el = document.getElementById('pL');
+  
+  if (!paged.length) {
+    el.innerHTML = '<div class="empty"><div class="ei">🔍</div><p>No products found</p></div>';
+  } else {
+    el.innerHTML = paged.map(p => {
+      const isCustom = p._source === 'supabase';
+      return '<div class="pc' + (isCustom ? ' cp' : '') + '">' +
+        '<img class="pi" src="' + h(p.image || FB) + '" onerror="this.src=\'' + FB + '\'" alt="">' +
+        '<div class="pn"><div class="pna">' + h(p.title) + '</div><div class="pm">' +
+        '<span class="mk">' + h(CL[p.category] || p.category) + '</span>' +
+        (p.price ? '<span class="mk pr">$' + p.price + '</span>' : '') +
+        '</div></div>' +
+        '<div class="pb">' +
+        '<button class="ab2 ed" onclick="openEdit(' + p.id + ')" title="Edit"><i class="fas fa-pen"></i></button>' +
+        '<button class="ab2 dl" onclick="delP(' + p.id + ')" title="Delete"><i class="fas fa-trash"></i></button>' +
+        '</div></div>';
+    }).join('');
+  }
+  
   rpg(pgs);
 }
-function rpg(t){
-  const pg2=document.getElementById('pg');if(t<=1){pg2.innerHTML='';return;}
-  let h2='';if(pg>1)h2+='<button class="pb2" onclick="gp('+(pg-1)+')">&#8249;</button>';
-  for(let i=1;i<=t;i++){if(i===pg||i===1||i===t||Math.abs(i-pg)<=1)h2+='<button class="pb2'+(i===pg?' on':'')+'" onclick="gp('+i+')">'+i+'</button>';else if(Math.abs(i-pg)===2)h2+='<span style="padding:0 3px">…</span>';}
-  if(pg<t)h2+='<button class="pb2" onclick="gp('+(pg+1)+')">&#8250;</button>';
-  pg2.innerHTML=h2;
-}
-function gp(n){pg=n;rl();window.scrollTo(0,0);}
 
-// ── EDIT ──
-function openEdit(id){
-  const p=merged().find(x=>x.id===id);if(!p)return;eId=id;
-  document.getElementById('mN').value=p.title||'';document.getElementById('mD').value=p.description||'';
-  document.getElementById('mC').value=p.category||'cakes';document.getElementById('mP').value=p.price||'';
-  document.getElementById('mB').value=p.badge||'';document.getElementById('mI').value=p.image||'';
+function rpg(t) {
+  const pg2 = document.getElementById('pg');
+  if (t <= 1) {
+    pg2.innerHTML = '';
+    return;
+  }
+  
+  let h2 = '';
+  if (pg > 1) h2 += '<button class="pb2" onclick="gp(' + (pg - 1) + ')">&#8249;</button>';
+  
+  for (let i = 1; i <= t; i++) {
+    if (i === pg || i === 1 || i === t || Math.abs(i - pg) <= 1) {
+      h2 += '<button class="pb2' + (i === pg ? ' on' : '') + '" onclick="gp(' + i + ')">' + i + '</button>';
+    } else if (Math.abs(i - pg) === 2) {
+      h2 += '<span style="padding:0 3px">…</span>';
+    }
+  }
+  
+  if (pg < t) h2 += '<button class="pb2" onclick="gp(' + (pg + 1) + ')">&#8250;</button>';
+  
+  pg2.innerHTML = h2;
+}
+
+function gp(n) {
+  pg = n;
+  rl();
+  window.scrollTo(0, 0);
+}
+
+// ════════════════════════════════════════════════════════
+// EDIT
+// ════════════════════════════════════════════════════════
+
+function openEdit(id) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) {
+    toast('Product not found', 'er');
+    return;
+  }
+  
+  eId = id;
+  document.getElementById('mN').value = p.title || '';
+  document.getElementById('mD').value = p.description || '';
+  document.getElementById('mC').value = p.category || 'cakes';
+  document.getElementById('mP').value = p.price || '';
+  document.getElementById('mB').value = p.badge || '';
+  document.getElementById('mI').value = p.image || '';
+  
   // Reset AI state
-  editAiD=null;document.getElementById('eAiR').style.display='none';
+  editAiD = null;
+  document.getElementById('eAiR').style.display = 'none';
   document.getElementById('eOv').classList.add('on');
 }
-function closeEdit(){document.getElementById('eOv').classList.remove('on');eId=null;}
-async function saveEdit(){
-  if(!eId)return;const nm=document.getElementById('mN').value.trim();if(!nm){toast('Name required','er');return;}
-  const cat=document.getElementById('mC').value;const c=getC();const i=c.findIndex(p=>p.id===eId);
-  const orig=merged().find(p=>p.id===eId)||{};
-  const newImg=document.getElementById('mI').value.trim()||orig.image;
-  const upd={...orig,id:eId,title:nm,description:document.getElementById('mD').value.trim(),category:cat,categoryLabel:CL[cat]||cat,price:document.getElementById('mP').value?parseFloat(document.getElementById('mP').value):null,badge:document.getElementById('mB').value||null,image:newImg,_custom:true};
-  if(i>=0)c[i]=upd;else c.push(upd);
-  setC(c);
 
-  // Sync to Supabase if it has a DB id
-  try{
-    const sbId=orig._sbId||eId;
-    if(sbId&&String(sbId).length>6){ // Supabase ids are large ints
-      await sbUpdateProduct(sbId,{nombre:nm,descripcion:upd.description,categoria:cat,precio:upd.price,imagen_url:newImg&&!newImg.startsWith('data:')?newImg:null});
-      toast('☁️ Updated in Supabase!','ok');
-    }
-  }catch(e){toast('⚠️ Cloud update failed','er');}
-
-  upS();rl();closeEdit();toast('✅ Updated!','ok');
-}
-async function delP(id){
-  if(!confirm('Delete this product?'))return;
-  const orig=merged().find(p=>p.id===id)||{};
-  // Remove from custom list if present
-  setC(getC().filter(p=>p.id!==id));
-  // Mark base product as deleted so it stays hidden
-  const isBase=BASE.some(p=>p.id===id);
-  if(isBase){const d=getDeleted();d.add(id);setDeleted(d);}
-
-  // Delete from Supabase
-  try{
-    const sbId=orig._sbId||id;
-    if(sbId&&String(sbId).length>6){
-      await sbDeleteProduct(sbId);
-      toast('☁️ Deleted from Supabase','ok');
-    }
-  }catch(e){toast('⚠️ Cloud delete failed','er');}
-
-  upS();rl();toast('🗑️ Deleted','ok');
-}
-document.getElementById('eOv').addEventListener('click',function(e){if(e.target===this)closeEdit();});
-
-
-// ══════════════════════════════════════════════════
-// PRIORITY 2: DATA PERSISTENCE — SURVIVE DEPLOYS
-// ══════════════════════════════════════════════════
-
-function exportData() {
-  const custom = getC();
-  if (!custom.length) { toast('No custom products to export','er'); return; }
-  // Resolve all images back to b64 for export
-  const exportData = custom.map(p => {
-    let img = p.image;
-    if (img && img.startsWith('__local:')) {
-      img = localStorage.getItem(img.replace('__local:','')) || p.image;
-    }
-    return {...p, image: img};
-  });
-  const blob = new Blob([JSON.stringify({
-    version: 2,
-    exported: new Date().toISOString(),
-    products: exportData
-  }, null, 2)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'products-override.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  const msg = document.getElementById('persistMsg');
-  msg.style.display = 'block';
-  msg.innerHTML = '✅ Exported! Place <strong>products-override.json</strong> in your <code>public/</code> folder and push to GitHub to keep products after deploys.';
-  msg.style.color = '#2E7D62';
-  toast('✅ products-override.json downloaded!','ok');
+function closeEdit() {
+  document.getElementById('eOv').classList.remove('on');
+  eId = null;
 }
 
-function importData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      const products = data.products || data; // support both formats
-      if (!Array.isArray(products)) throw new Error('Invalid format');
-      // Merge: imported products override existing ones by id
-      const existing = getC();
-      const existingIds = new Set(existing.map(p => p.id));
-      let added = 0, updated = 0;
-      products.forEach(p => {
-        const idx = existing.findIndex(x => x.id === p.id);
-        if (idx >= 0) { existing[idx] = {...p, _custom: true}; updated++; }
-        else { existing.push({...p, _custom: true}); added++; }
-      });
-      setC(existing);
-      upS(); rl();
-      const msg = document.getElementById('persistMsg');
-      msg.style.display = 'block';
-      msg.innerHTML = '✅ Imported: <strong>' + added + '</strong> new, <strong>' + updated + '</strong> updated';
-      msg.style.color = '#2E7D62';
-      toast('✅ Imported ' + (added+updated) + ' products!','ok');
-    } catch(err) {
-      toast('Import error: ' + err.message,'er');
-    }
-    event.target.value = '';
+async function saveEdit() {
+  if (!eId) return;
+  
+  const nm = document.getElementById('mN').value.trim();
+  if (!nm) {
+    toast('Name required', 'er');
+    return;
+  }
+  
+  const cat = document.getElementById('mC').value;
+  const newImg = document.getElementById('mI').value.trim();
+  
+  const updatedData = {
+    nombre: nm,
+    descripcion: document.getElementById('mD').value.trim(),
+    categoria: cat,
+    precio: document.getElementById('mP').value ? parseFloat(document.getElementById('mP').value) : null,
+    badge: document.getElementById('mB').value || null,
+    imagen_url: newImg || null
   };
-  reader.readAsText(file);
-}
-
-function clearImgCache() {
-  let freed = 0;
-  const keys = [];
-  for(let i=0; i<localStorage.length; i++){
-    const k = localStorage.key(i);
-    if(k && k.startsWith('sbd_img_')) keys.push(k);
-  }
-  keys.forEach(k => { localStorage.removeItem(k); freed++; });
-  // Also update products to use placeholder for freed images
-  const prods = JSON.parse(localStorage.getItem(SK)||'[]');
-  prods.forEach(p => {
-    if(p.image && p.image.startsWith('__local:')) {
-      p.image = 'images/placeholder.jpg';
-    }
-  });
-  localStorage.setItem(SK, JSON.stringify(prods));
-  const msg = document.getElementById('persistMsg');
-  msg.style.display = 'block';
-  msg.innerHTML = '🧹 Freed ' + freed + ' cached images from storage. Products with uploaded photos now show placeholder until you re-upload or set an image URL.';
-  msg.style.color = '#7A5C00';
-  toast('🧹 Freed ' + freed + ' image caches','ok');
-}
-
-// Auto-load products-override.json on startup (for Vercel deploys)
-async function autoLoadOverride() {
+  
+  // Update in Supabase
   try {
-    const r = await fetch('/products-override.json?v=' + Date.now(), {cache:'no-store'});
-    if (!r.ok) return; // File doesn't exist yet, that's fine
-    const data = await r.json();
-    const products = data.products || data;
-    if (!Array.isArray(products) || !products.length) return;
-    // Only load if localStorage is empty or override is newer
-    const existing = JSON.parse(localStorage.getItem(SK)||'[]');
-    const lastLoad = localStorage.getItem('sbd_override_loaded');
-    const overrideDate = data.exported || '0';
-    if (!existing.length || !lastLoad || overrideDate > lastLoad) {
-      // Merge override into localStorage
-      const existingIds = new Set(existing.map(p=>p.id));
-      let merged2 = [...existing];
-      products.forEach(p => {
-        const idx = merged2.findIndex(x=>x.id===p.id);
-        if(idx>=0) merged2[idx]={...p,_custom:true};
-        else merged2.push({...p,_custom:true});
-      });
-      localStorage.setItem(SK, JSON.stringify(merged2));
-      localStorage.setItem('sbd_override_loaded', overrideDate);
-      console.log('[SBD] Loaded', products.length, 'products from products-override.json');
+    const p = allProducts.find(x => x.id === eId);
+    if (p && p._sbId) {
+      await sbUpdateProduct(p._sbId, updatedData);
     }
-  } catch(e) {
-    // Silently ignore - file probably doesn't exist yet
+    
+    // Update local array
+    const idx = allProducts.findIndex(x => x.id === eId);
+    if (idx >= 0) {
+      allProducts[idx] = {
+        ...allProducts[idx],
+        title: nm,
+        description: updatedData.descripcion,
+        category: cat,
+        categoryLabel: CL[cat] || cat,
+        price: updatedData.precio,
+        badge: updatedData.badge,
+        image: newImg || allProducts[idx].image
+      };
+    }
+    
+    toast('Updated in Supabase!', 'ok');
+  } catch (e) {
+    toast('Cloud update failed: ' + e.message, 'er');
+  }
+  
+  upS();
+  rl();
+  closeEdit();
+}
+
+async function delP(id) {
+  if (!confirm('Delete this product?')) return;
+  
+  const p = allProducts.find(x => x.id === id);
+  
+  // Delete from Supabase
+  try {
+    if (p && p._sbId) {
+      await sbDeleteProduct(p._sbId);
+    }
+    
+    // Remove from local array
+    allProducts = allProducts.filter(x => x.id !== id);
+    
+    toast('Deleted from Supabase', 'ok');
+  } catch (e) {
+    toast('Cloud delete failed: ' + e.message, 'er');
+  }
+  
+  upS();
+  rl();
+}
+
+document.getElementById('eOv').addEventListener('click', function(e) {
+  if (e.target === this) closeEdit();
+});
+
+// ════════════════════════════════════════════════════════
+// ADMIN GROQ CHAT
+// ════════════════════════════════════════════════════════
+
+const AC_PROMPT = 'You are a smart admin assistant for Sweets by Dulce bakery. Help the admin manage their catalog, pricing, and business. Be concise and practical. For pricing, provide specific NY market rates.';
+let acMsgs = [];
+
+function togAC() {
+  acOpen = !acOpen;
+  const w = document.getElementById('acW');
+  if (acOpen) {
+    w.classList.add('on');
+    if (!acInit) {
+      acInit = true;
+      acBotMsg("Hi! I'm your admin assistant. I can help you write product descriptions, suggest prices, explain features, or analyze your catalog. What do you need?");
+    }
+    setTimeout(() => document.getElementById('acI').focus(), 400);
+  } else {
+    w.classList.remove('on');
   }
 }
 
-// ── ADMIN GROQ CHAT ──
-const AC_PROMPT=`You are a smart admin assistant for Sweets by Dulce bakery. Help the admin manage their catalog, pricing, and business. You know about custom cakes, cupcakes, specialty desserts. Be concise and practical. Use emojis. For pricing, provide specific NY market rates.`;
-let acMsgs=[];
+function acBotMsg(t) {
+  const m = document.getElementById('acM');
+  const d = document.createElement('div');
+  d.className = 'cm bot';
+  d.textContent = t;
+  m.appendChild(d);
+  m.scrollTop = m.scrollHeight;
+}
 
-function togAC(){
-  acOpen=!acOpen;
-  const w=document.getElementById('acW');
-  if(acOpen){w.classList.add('on');if(!acInit){acInit=true;acBotMsg("Hi! 🎂 I'm your admin assistant. I can help you write product descriptions, suggest prices, explain features, or analyze your catalog. What do you need?");}setTimeout(()=>document.getElementById('acI').focus(),400);}
-  else w.classList.remove('on');
+function acUsrMsg(t) {
+  const m = document.getElementById('acM');
+  const d = document.createElement('div');
+  d.className = 'cm usr';
+  d.textContent = t;
+  m.appendChild(d);
+  m.scrollTop = m.scrollHeight;
 }
-function acBotMsg(t){
-  const m=document.getElementById('acM');const d=document.createElement('div');d.className='cm bot';d.textContent=t;m.appendChild(d);m.scrollTop=m.scrollHeight;
-}
-function acUsrMsg(t){
-  const m=document.getElementById('acM');const d=document.createElement('div');d.className='cm usr';d.textContent=t;m.appendChild(d);m.scrollTop=m.scrollHeight;
-}
-function acTyp(){
-  const m=document.getElementById('acM');const d=document.createElement('div');d.className='cm typ';d.id='acTyp';d.innerHTML='<div class="td"><span></span><span></span><span></span></div>';m.appendChild(d);m.scrollTop=m.scrollHeight;
-}
-function acRmTyp(){const t=document.getElementById('acTyp');if(t)t.remove();}
-async function acSend(){
-  const inp=document.getElementById('acI');const txt=inp.value.trim();if(!txt)return;inp.value='';
-  acUsrMsg(txt);acMsgs.push({role:'user',content:txt});
-  document.getElementById('acS').disabled=true;acTyp();
-  try{
-    const reply=await groq([{role:'system',content:AC_PROMPT},...acMsgs.slice(-8)],280);
-    acRmTyp();acMsgs.push({role:'assistant',content:reply});acBotMsg(reply);
-  }catch(e){acRmTyp();acBotMsg('Connection error. Check your internet and try again.');}
-  document.getElementById('acS').disabled=false;inp.focus();
-}
-function aqSend(t){document.getElementById('acI').value=t;acSend();const q=document.getElementById('acQ');if(q)q.style.display='none';}
 
-// ── TOAST ──
-function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(type||'');t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
-function h(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function acTyp() {
+  const m = document.getElementById('acM');
+  const d = document.createElement('div');
+  d.className = 'cm typ';
+  d.id = 'acTyp';
+  d.innerHTML = '<div class="td"><span></span><span></span><span></span></div>';
+  m.appendChild(d);
+  m.scrollTop = m.scrollHeight;
+}
+
+function acRmTyp() {
+  const t = document.getElementById('acTyp');
+  if (t) t.remove();
+}
+
+async function acSend() {
+  const inp = document.getElementById('acI');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  
+  inp.value = '';
+  acUsrMsg(txt);
+  acMsgs.push({role: 'user', content: txt});
+  document.getElementById('acS').disabled = true;
+  acTyp();
+  
+  try {
+    const reply = await groq([{role: 'system', content: AC_PROMPT}, ...acMsgs.slice(-8)], 280);
+    acRmTyp();
+    acMsgs.push({role: 'assistant', content: reply});
+    acBotMsg(reply);
+  } catch (e) {
+    acRmTyp();
+    acBotMsg('Connection error. Check your internet and try again.');
+  }
+  
+  document.getElementById('acS').disabled = false;
+  inp.focus();
+}
+
+function aqSend(t) {
+  document.getElementById('acI').value = t;
+  acSend();
+  const q = document.getElementById('acQ');
+  if (q) q.style.display = 'none';
+}
+
+// ════════════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════════════
+
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type || '');
+  t.classList.add('on');
+  setTimeout(() => t.classList.remove('on'), 2800);
+}
+
+function h(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 </script>
 </body>
 </html>
