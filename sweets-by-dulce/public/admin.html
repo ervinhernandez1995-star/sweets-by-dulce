@@ -251,6 +251,25 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
           ☁️ <strong>Supabase Connected:</strong> New products you add are automatically saved to the cloud and appear instantly on all devices — no redeploy needed. Use <em>Migrate Catalog</em> once to upload the 97 base products to Supabase.
         </div>
       </div>
+
+      <!-- Groq API Key Config -->
+      <div class="cc" id="groqKeyCard">
+        <div class="ct">🔑 Groq API Key <span class="aitag">AI Powered</span></div>
+        <p style="font-size:.84rem;font-weight:600;opacity:.75;margin-bottom:.8rem">
+          Si Groq dice "invalid api key" o "expired", genera una nueva en <strong>console.groq.com</strong> → API Keys y pégala aquí. Se guarda en este dispositivo.
+        </p>
+        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+          <input type="password" id="groqKeyInput" placeholder="Pega tu API key de Groq" 
+            style="flex:1;min-width:200px;padding:.7rem 1rem;border:2px solid rgba(255,158,181,.35);border-radius:12px;font-family:'Quicksand',sans-serif;font-size:.88rem;font-weight:600;background:rgba(255,255,255,.8);color:#4A3728;outline:none">
+          <button class="aib" onclick="saveGroqKey()" style="white-space:nowrap">
+            <i class="fas fa-save"></i> Guardar Key
+          </button>
+          <button class="aib" style="background:linear-gradient(135deg,#666,#888);white-space:nowrap" onclick="testGroqKey()">
+            <i class="fas fa-vial"></i> Probar
+          </button>
+        </div>
+        <div id="groqKeyStatus" style="margin-top:.5rem;font-size:.82rem;font-weight:700;display:none"></div>
+      </div>
 <div class="cc">
         <div class="ct">🔥 Most Viewed Products</div>
         <div class="mb" id="topC"><p style="opacity:.5;font-size:.83rem">Visit the main site to start tracking views!</p></div>
@@ -455,7 +474,8 @@ const PASS='dulce2024';
 const SK='sbd_products';
 const DK='sbd_deleted';
 const AK='sbd_analytics';
-const GK='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';
+// Groq key — stored locally on this device (Dashboard → Groq API Key)
+function getGK(){return localStorage.getItem('sbd_groq_key')||'';}
 const GM='llama-3.3-70b-versatile';
 const CL={cakes:'Cakes',cupcakes:'Cupcakes',specialty:'Specialty',holiday:'Special Dates',pies:'Pies & Tarts',drinks:'Drinks'};
 const FB="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>🧁</text></svg>";
@@ -464,7 +484,7 @@ let pg=1,eId=null,upB64=null,aiD=null,acOpen=false,acInit=false,matchData=[];
 
 // ── SUPABASE CONFIG ──
 const SB_URL='https://ybdybhrbtwuzninrgamv.supabase.co';
-const SB_KEY='sb_publishable_T_ycHkSbs3MqiWlh6luhnw_aN2PtFeP';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliZHliaHJidHd1em5pbnJnYW12Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDQ5NjQ2NiwiZXhwIjoyMDkwMDcyNDY2fQ.6A5wzmUJ0tluz32u-LifzzCRFwgmEVvoGNDgDzkAktk';
 const SB_BUCKET='fotos-productos';
 
 function sbFetch(path, opts){
@@ -509,20 +529,78 @@ async function sbLoadProducts(){
 
 // ── MIGRATE CATALOG TO SUPABASE ──
 async function migrateCatalog(){
-  if(!confirm('This will upload all 97 catalog products to Supabase. Continue?'))return;
   const btn=document.getElementById('migBtn');
-  btn.disabled=true;btn.textContent='⏳ Migrating...';
-  let ok=0,fail=0;
-  for(const p of BASE){
-    try{
-      await sbFetch('/rest/v1/productos',{method:'POST',headers:{'Prefer':'return=minimal'},
-        body:JSON.stringify({nombre:p.title,descripcion:p.description||'',categoria:p.category,precio:p.price||null,imagen_url:p.image||null})
-      });
-      ok++;
-    }catch(e){fail++;}
+  btn.disabled=true;btn.textContent='⏳ Checking Supabase...';
+
+  // Get existing names from Supabase to skip duplicates
+  let existingNames=new Set();
+  try{
+    const rows=await sbLoadProducts();
+    if(rows&&rows.length) rows.forEach(r=>existingNames.add((r.nombre||'').trim().toLowerCase()));
+  }catch(e){
+    btn.disabled=false;btn.textContent='📦 Migrate Catalog';
+    toast('❌ Cannot reach Supabase: '+e.message.slice(0,60),'er');
+    return;
   }
+
+  // BASE products + any custom products in localStorage
+  const custom=getC();
+  const allProducts=[...BASE];
+  custom.forEach(cp=>{if(!allProducts.find(p=>p.id===cp.id))allProducts.push(cp);});
+
+  // Only migrate products not already in Supabase
+  const toMigrate=allProducts.filter(p=>!existingNames.has((p.title||'').trim().toLowerCase()));
+
+  if(!toMigrate.length){
+    btn.disabled=false;btn.textContent='📦 Migrate Catalog';
+    toast('✅ All '+allProducts.length+' products already in Supabase','ok');
+    return;
+  }
+
+  if(!confirm('Will upload '+toMigrate.length+' new products to Supabase ('+existingNames.size+' already exist). Continue?')){
+    btn.disabled=false;btn.textContent='📦 Migrate Catalog';
+    return;
+  }
+
+  btn.textContent='⏳ Migrating 0/'+toMigrate.length+'...';
+  let ok=0,fail=0;
+
+  for(const p of toMigrate){
+    try{
+      // Only send columns that exist in the tabla: nombre, descripcion, categoria, precio, imagen_url
+      const imgUrl=p.image&&!p.image.startsWith('data:')&&!p.image.startsWith('__local:')?p.image:null;
+      const res=await sbFetch('/rest/v1/productos',{
+        method:'POST',
+        headers:{'Prefer':'return=representation'},
+        body:JSON.stringify({
+          nombre:p.title||'',
+          descripcion:p.description||'',
+          categoria:p.category||'specialty',
+          precio:p.price||null,
+          imagen_url:imgUrl
+        })
+      });
+      if(res.ok){
+        const saved=await res.json();
+        // Update localStorage entry with Supabase ID so future edits sync
+        if(saved&&saved[0]){
+          const c=getC();
+          const idx=c.findIndex(x=>x.id===p.id);
+          if(idx>=0){c[idx]._sbId=saved[0].id;c[idx]._supabase=true;setC(c);}
+        }
+        ok++;
+      }else{
+        const errText=await res.text();
+        console.warn('Migrate fail:',p.title,errText);
+        fail++;
+      }
+    }catch(e){fail++;console.warn('Migrate error:',p.title,e);}
+    btn.textContent='⏳ Migrating '+ok+'/'+toMigrate.length+'...';
+  }
+
   btn.disabled=false;btn.textContent='📦 Migrate Catalog';
   toast('✅ Migrated: '+ok+' products'+(fail?' | ⚠️ '+fail+' failed':''),'ok');
+  upS();rl();
 }
 
 // ── BASE CATALOG (subset for admin) ──
@@ -723,7 +801,37 @@ function topP(n){
 function totV(){return getLog().filter(e=>e.event==='product_view').length;}
 
 // ── INIT ──
+// ── GROQ KEY MANAGEMENT ──
+function saveGroqKey(){
+  const val=document.getElementById('groqKeyInput').value.trim();
+  if(!val){
+    showGroqStatus('❌ Pega una key válida','#c0392b');return;
+  }
+  localStorage.setItem('sbd_groq_key',val);
+  showGroqStatus('✅ Key guardada — prueba la IA ahora','#27ae60');
+}
+async function testGroqKey(){
+  const btn=document.querySelector('#groqKeyCard .aib:last-of-type');
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Probando...';}
+  try{
+    const reply=await groq([{role:'user',content:'Say "OK" in one word'}],10);
+    showGroqStatus('✅ Groq funciona correctamente: '+reply,'#27ae60');
+  }catch(e){
+    showGroqStatus('❌ '+e.message,'#c0392b');
+  }
+  if(btn){btn.disabled=false;btn.innerHTML='<i class="fas fa-vial"></i> Probar';}
+}
+function showGroqStatus(msg,color){
+  const el=document.getElementById('groqKeyStatus');
+  if(el){el.style.display='block';el.style.color=color;el.textContent=msg;}
+}
+
 async function init(){
+  // Prefill Groq key input if saved
+  const savedKey=localStorage.getItem('sbd_groq_key');
+  const keyInput=document.getElementById('groqKeyInput');
+  if(keyInput&&savedKey)keyInput.value=savedKey;
+
   await autoLoadOverride();
   // Load from Supabase — source of truth for new products
   try{
@@ -740,7 +848,6 @@ async function init(){
           categoryLabel: ({"cakes":"Cakes","cupcakes":"Cupcakes","specialty":"Specialty","holiday":"Special Dates","pies":"Pies & Tarts","drinks":"Drinks"})[row.categoria]||row.categoria||'Specialty',
           price: row.precio||null,
           image: row.imagen_url||'',
-          badge: row.badge||null,
           _custom:true, _sbId: row.id, _supabase:true
         };
         // Find by supabase id or by title match to avoid duplicates
@@ -783,14 +890,18 @@ function rdash(){
 // ── GROQ ──
 async function groq(msgs,tok){
   tok=tok||300;
-  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+  const r=await fetch('/api/chat',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+GK},
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({model:GM,max_tokens:tok,temperature:0.7,messages:msgs})
   });
   const d=await r.json();
   if(d.choices&&d.choices[0])return d.choices[0].message.content;
-  throw new Error(d.error&&d.error.message||'Groq error');
+  const errMsg=d.error&&d.error.message||'Groq error';
+  if(r.status===401||errMsg.toLowerCase().includes('invalid')||errMsg.toLowerCase().includes('api_key')||errMsg.toLowerCase().includes('expired')){
+    throw new Error('🔑 Groq key inválida o expirada. Ve al Dashboard → "Groq API Key" y pega tu nueva key de console.groq.com');
+  }
+  throw new Error(errMsg);
 }
 
 // ── AI ANALYZE IMAGE ──
@@ -967,17 +1078,18 @@ async function saveProd(){
   // Save to Supabase DB
   let sbId=null;
   try{
+    // NOTE: 'badge' column does not exist in Supabase tabla, stored locally only
     const rows=await sbSaveProduct({
       nombre:nm,
       descripcion:document.getElementById('fD').value.trim(),
       categoria:cat,
       precio:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,
-      imagen_url:imageUrl.startsWith('data:')?null:imageUrl
+      imagen_url:imageUrl&&!imageUrl.startsWith('data:')?imageUrl:null
     });
     if(rows&&rows[0])sbId=rows[0].id;
-    toast('☁️ Saved to Supabase!','ok');
+    toast('☁️ Saved to Supabase — visible on all devices!','ok');
   }catch(e){
-    toast('⚠️ Cloud save failed — saved locally only','er');
+    toast('⚠️ Cloud save failed: '+e.message.slice(0,80),'er');
   }
 
   // Also save to localStorage as fallback

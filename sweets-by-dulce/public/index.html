@@ -6816,7 +6816,6 @@
                 categoryLabel: ADMIN_CAT_LABELS[row.categoria] || row.categoria || 'Specialty',
                 price: row.precio || null,
                 image: row.imagen_url || '',
-                badge: row.badge || null,
                 _supabase: true
             };
         }
@@ -6847,7 +6846,6 @@
                         if (existing) {
                             if (sp.price) existing.price = sp.price;
                             if (sp.image) existing.image = sp.image;
-                            if (sp.badge) existing.badge = sp.badge;
                             if (sp.description) existing.description = sp.description;
                             existing._supabaseId = row.id;
                         }
@@ -7916,7 +7914,6 @@ window.SBD_Analytics = SBD_Analytics;
     // ═══════════════════════════════════════════
     // GROQ AI CHATBOT
     // ═══════════════════════════════════════════
-    const GROQ_API_KEY = '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';
     const GROQ_CHAT_MODEL = 'llama-3.3-70b-versatile';
     let chatHistory = [];
     let chatOpen = false;
@@ -8048,18 +8045,16 @@ PERSONALITY: Be warm, sweet and enthusiastic. Use cake/sweet emojis occasionally
         showTyping();
 
         try {
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + GROQ_API_KEY
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    message: text,
                     model: GROQ_CHAT_MODEL,
-                    messages: [
-                        { role: 'system', content: SYSTEM_PROMPT },
-                        ...chatHistory.slice(-8)
-                    ],
+                    systemPrompt: SYSTEM_PROMPT,
+                    history: chatHistory.slice(-8),
                     max_tokens: 350,
                     temperature: 0.7
                 })
