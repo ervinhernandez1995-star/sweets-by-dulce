@@ -10,8 +10,8 @@
       "destination": "/public/admin.html"
     },
     {
-      "source": "/images/(.*)",
-      "destination": "/public/images/$1"
+      "source": "/admin.html",
+      "destination": "/public/admin.html"
     },
     {
       "source": "/(.*)",
