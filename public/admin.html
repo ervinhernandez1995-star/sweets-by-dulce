@@ -251,6 +251,25 @@ body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F
           ☁️ <strong>Supabase Connected:</strong> New products you add are automatically saved to the cloud and appear instantly on all devices — no redeploy needed. Use <em>Migrate Catalog</em> once to upload the 97 base products to Supabase.
         </div>
       </div>
+
+      <!-- Groq API Key Config -->
+      <div class="cc" id="groqKeyCard">
+        <div class="ct">🔑 Groq API Key <span class="aitag">AI Powered</span></div>
+        <p style="font-size:.84rem;font-weight:600;opacity:.75;margin-bottom:.8rem">
+          Si Groq dice "invalid api key" o "expired", genera una nueva en <strong>console.groq.com</strong> → API Keys y pégala aquí. Se guarda en este dispositivo.
+        </p>
+        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+          <input type="password" id="groqKeyInput" placeholder="Pega tu API key de Groq" 
+            style="flex:1;min-width:200px;padding:.7rem 1rem;border:2px solid rgba(255,158,181,.35);border-radius:12px;font-family:'Quicksand',sans-serif;font-size:.88rem;font-weight:600;background:rgba(255,255,255,.8);color:#4A3728;outline:none">
+          <button class="aib" onclick="saveGroqKey()" style="white-space:nowrap">
+            <i class="fas fa-save"></i> Guardar Key
+          </button>
+          <button class="aib" style="background:linear-gradient(135deg,#666,#888);white-space:nowrap" onclick="testGroqKey()">
+            <i class="fas fa-vial"></i> Probar
+          </button>
+        </div>
+        <div id="groqKeyStatus" style="margin-top:.5rem;font-size:.82rem;font-weight:700;display:none"></div>
+      </div>
 <div class="cc">
         <div class="ct">🔥 Most Viewed Products</div>
         <div class="mb" id="topC"><p style="opacity:.5;font-size:.83rem">Visit the main site to start tracking views!</p></div>
@@ -455,10 +474,8 @@ const PASS='dulce2024';
 const SK='sbd_products';
 const DK='sbd_deleted';
 const AK='sbd_analytics';
-// ── GROQ CONFIG ──
-// ⚠️ IMPORTANT: Groq revokes keys that appear in public GitHub repos.
-// If you get "invalid api key", go to console.groq.com → API Keys → create new key
-const GK='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';
+// Groq key — stored locally on this device (Dashboard → Groq API Key)
+function getGK(){return localStorage.getItem('sbd_groq_key')||'';}
 const GM='llama-3.3-70b-versatile';
 const CL={cakes:'Cakes',cupcakes:'Cupcakes',specialty:'Specialty',holiday:'Special Dates',pies:'Pies & Tarts',drinks:'Drinks'};
 const FB="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>🧁</text></svg>";
@@ -487,7 +504,7 @@ async function sbUploadImage(file){
 }
 
 async function sbSaveProduct(data){
-  // data: {nombre, descripcion, categoria, precio, imagen_url, badge}
+  // data: {nombre, descripcion, categoria, precio, imagen_url}
   const res=await sbFetch('/rest/v1/productos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(data)});
   if(!res.ok){const e=await res.text();throw new Error('DB error: '+e);}
   return res.json();
@@ -512,55 +529,73 @@ async function sbLoadProducts(){
 
 // ── MIGRATE CATALOG TO SUPABASE ──
 async function migrateCatalog(){
-  // Get existing Supabase products to avoid duplicates
+  const btn=document.getElementById('migBtn');
+  btn.disabled=true;btn.textContent='⏳ Checking Supabase...';
+
+  // Get existing names from Supabase to skip duplicates
   let existingNames=new Set();
   try{
     const rows=await sbLoadProducts();
     if(rows&&rows.length) rows.forEach(r=>existingNames.add((r.nombre||'').trim().toLowerCase()));
-  }catch(e){}
+  }catch(e){
+    btn.disabled=false;btn.textContent='📦 Migrate Catalog';
+    toast('❌ Cannot reach Supabase: '+e.message.slice(0,60),'er');
+    return;
+  }
 
-  // Combine BASE + custom localStorage products
+  // BASE products + any custom products in localStorage
   const custom=getC();
-  const allToMigrate=[...BASE];
-  custom.forEach(cp=>{
-    if(!allToMigrate.find(p=>p.id===cp.id)) allToMigrate.push(cp);
-  });
+  const allProducts=[...BASE];
+  custom.forEach(cp=>{if(!allProducts.find(p=>p.id===cp.id))allProducts.push(cp);});
 
-  const newOnes=allToMigrate.filter(p=>!existingNames.has((p.title||'').trim().toLowerCase()));
-  if(!newOnes.length){toast('✅ All products already in Supabase','ok');return;}
-  if(!confirm('Will upload '+newOnes.length+' new products to Supabase (skipping '+
-    (allToMigrate.length-newOnes.length)+' already there). Continue?'))return;
+  // Only migrate products not already in Supabase
+  const toMigrate=allProducts.filter(p=>!existingNames.has((p.title||'').trim().toLowerCase()));
 
-  const btn=document.getElementById('migBtn');
-  btn.disabled=true;btn.textContent='⏳ Migrating...';
+  if(!toMigrate.length){
+    btn.disabled=false;btn.textContent='📦 Migrate Catalog';
+    toast('✅ All '+allProducts.length+' products already in Supabase','ok');
+    return;
+  }
+
+  if(!confirm('Will upload '+toMigrate.length+' new products to Supabase ('+existingNames.size+' already exist). Continue?')){
+    btn.disabled=false;btn.textContent='📦 Migrate Catalog';
+    return;
+  }
+
+  btn.textContent='⏳ Migrating 0/'+toMigrate.length+'...';
   let ok=0,fail=0;
 
-  for(const p of newOnes){
+  for(const p of toMigrate){
     try{
+      // Only send columns that exist in the tabla: nombre, descripcion, categoria, precio, imagen_url
       const imgUrl=p.image&&!p.image.startsWith('data:')&&!p.image.startsWith('__local:')?p.image:null;
       const res=await sbFetch('/rest/v1/productos',{
         method:'POST',
         headers:{'Prefer':'return=representation'},
         body:JSON.stringify({
-          nombre:p.title,
+          nombre:p.title||'',
           descripcion:p.description||'',
-          categoria:p.category,
+          categoria:p.category||'specialty',
           precio:p.price||null,
-          imagen_url:imgUrl,
-          badge:p.badge||null
+          imagen_url:imgUrl
         })
       });
       if(res.ok){
-        // Update localStorage entry with the Supabase id
         const saved=await res.json();
+        // Update localStorage entry with Supabase ID so future edits sync
         if(saved&&saved[0]){
           const c=getC();
           const idx=c.findIndex(x=>x.id===p.id);
           if(idx>=0){c[idx]._sbId=saved[0].id;c[idx]._supabase=true;setC(c);}
         }
         ok++;
-      }else fail++;
-    }catch(e){fail++;console.warn('migrate fail',p.title,e);}
+      }else{
+        const errText=await res.text();
+        console.warn('Migrate fail:',p.title,errText);
+        fail++;
+      }
+    }catch(e){fail++;console.warn('Migrate error:',p.title,e);}
+    btn.textContent='⏳ Migrating '+ok+'/'+toMigrate.length+'...';
   }
 
   btn.disabled=false;btn.textContent='📦 Migrate Catalog';
@@ -766,7 +801,37 @@ function topP(n){
 function totV(){return getLog().filter(e=>e.event==='product_view').length;}
 
 // ── INIT ──
+// ── GROQ KEY MANAGEMENT ──
+function saveGroqKey(){
+  const val=document.getElementById('groqKeyInput').value.trim();
+  if(!val){
+    showGroqStatus('❌ Pega una key válida','#c0392b');return;
+  }
+  localStorage.setItem('sbd_groq_key',val);
+  showGroqStatus('✅ Key guardada — prueba la IA ahora','#27ae60');
+}
+async function testGroqKey(){
+  const btn=document.querySelector('#groqKeyCard .aib:last-of-type');
+  if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Probando...';}
+  try{
+    const reply=await groq([{role:'user',content:'Say "OK" in one word'}],10);
+    showGroqStatus('✅ Groq funciona correctamente: '+reply,'#27ae60');
+  }catch(e){
+    showGroqStatus('❌ '+e.message,'#c0392b');
+  }
+  if(btn){btn.disabled=false;btn.innerHTML='<i class="fas fa-vial"></i> Probar';}
+}
+function showGroqStatus(msg,color){
+  const el=document.getElementById('groqKeyStatus');
+  if(el){el.style.display='block';el.style.color=color;el.textContent=msg;}
+}
+
 async function init(){
+  // Prefill Groq key input if saved
+  const savedKey=localStorage.getItem('sbd_groq_key');
+  const keyInput=document.getElementById('groqKeyInput');
+  if(keyInput&&savedKey)keyInput.value=savedKey;
+
   await autoLoadOverride();
   // Load from Supabase — source of truth for new products
   try{
@@ -783,7 +848,6 @@ async function init(){
           categoryLabel: ({"cakes":"Cakes","cupcakes":"Cupcakes","specialty":"Specialty","holiday":"Special Dates","pies":"Pies & Tarts","drinks":"Drinks"})[row.categoria]||row.categoria||'Specialty',
           price: row.precio||null,
           image: row.imagen_url||'',
-          badge: row.badge||null,
           _custom:true, _sbId: row.id, _supabase:true
         };
         // Find by supabase id or by title match to avoid duplicates
@@ -826,16 +890,16 @@ function rdash(){
 // ── GROQ ──
 async function groq(msgs,tok){
   tok=tok||300;
-  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+  const r=await fetch('/api/chat',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+GK},
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({model:GM,max_tokens:tok,temperature:0.7,messages:msgs})
   });
   const d=await r.json();
   if(d.choices&&d.choices[0])return d.choices[0].message.content;
   const errMsg=d.error&&d.error.message||'Groq error';
-  if(r.status===401||errMsg.toLowerCase().includes('invalid')||errMsg.toLowerCase().includes('api key')){
-    throw new Error('🔑 Groq key expired — go to console.groq.com and create a new API key, then update GK in this file');
+  if(r.status===401||errMsg.toLowerCase().includes('invalid')||errMsg.toLowerCase().includes('api_key')||errMsg.toLowerCase().includes('expired')){
+    throw new Error('🔑 Groq key inválida o expirada. Ve al Dashboard → "Groq API Key" y pega tu nueva key de console.groq.com');
   }
   throw new Error(errMsg);
 }
@@ -997,8 +1061,7 @@ async function saveProd(){
   const saveBtn=document.querySelector('.sb');
   if(saveBtn){saveBtn.disabled=true;saveBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';}
 
-  const pastedUrl=document.getElementById('fI').value.trim();
-  let imageUrl=pastedUrl||FB;
+  let imageUrl=document.getElementById('fI').value.trim()||document.getElementById('fImg').value||FB;
 
   // If there's a local file queued (from drop zone), upload to Supabase Storage
   if(window._pendingUploadFile){
@@ -1008,50 +1071,30 @@ async function saveProd(){
       window._pendingUploadFile=null;
       toast('✅ Image uploaded!','ok');
     }catch(e){
-      toast('⚠️ Image upload failed — using URL or placeholder','er');
-      imageUrl=pastedUrl||FB;
+      toast('⚠️ Image upload failed, saving without cloud image','er');
     }
   }
-
-  // Image URL to store in Supabase (never base64)
-  const sbImageUrl=imageUrl.startsWith('data:')?null:imageUrl===FB?null:imageUrl;
-  const badge=document.getElementById('fB').value||null;
-  const desc=document.getElementById('fD').value.trim();
-  const price=document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null;
 
   // Save to Supabase DB
   let sbId=null;
   try{
+    // NOTE: 'badge' column does not exist in Supabase tabla, stored locally only
     const rows=await sbSaveProduct({
       nombre:nm,
-      descripcion:desc,
+      descripcion:document.getElementById('fD').value.trim(),
       categoria:cat,
-      precio:price,
-      imagen_url:sbImageUrl,
-      badge:badge
+      precio:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,
+      imagen_url:imageUrl&&!imageUrl.startsWith('data:')?imageUrl:null
     });
     if(rows&&rows[0])sbId=rows[0].id;
     toast('☁️ Saved to Supabase — visible on all devices!','ok');
   }catch(e){
-    toast('⚠️ Cloud save failed — saved locally only. Error: '+e.message.slice(0,60),'er');
+    toast('⚠️ Cloud save failed: '+e.message.slice(0,80),'er');
   }
 
-  // Save to localStorage as fallback / offline cache
+  // Also save to localStorage as fallback
   const c=getC();
-  c.push({
-    id:sbId||Date.now(),
-    title:nm,
-    description:desc,
-    category:cat,
-    categoryLabel:CL[cat]||cat,
-    price:price,
-    badge:badge,
-    image:sbImageUrl||imageUrl,
-    _custom:true,
-    _added:Date.now(),
-    _sbId:sbId,
-    _supabase:!!sbId
-  });
+  c.push({id:sbId||Date.now(),title:nm,description:document.getElementById('fD').value.trim(),category:cat,categoryLabel:CL[cat]||cat,price:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,badge:document.getElementById('fB').value||null,image:imageUrl,_custom:true,_added:Date.now(),_sbId:sbId});
   setC(c);
 
   ['fN','fD','fP','fI','fImg'].forEach(id=>document.getElementById(id).value='');
