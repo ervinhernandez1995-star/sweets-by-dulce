@@ -1,6 +1,0 @@
-{
-  "version": 2,
-  "exported": "2025-01-01T00:00:00.000Z",
-  "note": "Export your products from Admin → Dashboard → Export catalog JSON, rename to products-override.json and place here",
-  "products": []
-}
