@@ -14,8 +14,13 @@
       "destination": "/public/admin.html"
     },
     {
-      "source": "/(.*)",
-      "destination": "/public/$1"
+      "source": "/images/:path*",
+      "destination": "/public/images/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/public/:path*"
     }
   ]
 }
+
