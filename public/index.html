@@ -6793,7 +6793,7 @@
         // SUPABASE INTEGRATION — Load products from cloud
         // ══════════════════════════════════════════════════
         const SUPABASE_URL = 'https://ybdybhrbtwuzninrgamv.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_T_ycHkSbs3MqiWlh6luhnw_aN2PtFeP';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliZHliaHJidHd1em5pbnJnYW12Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDQ5NjQ2NiwiZXhwIjoyMDkwMDcyNDY2fQ.6A5wzmUJ0tluz32u-LifzzCRFwgmEVvoGNDgDzkAktk';
 
         function supaFetch(path, opts) {
             return fetch(SUPABASE_URL + path, {
@@ -7868,7 +7868,7 @@ window.SBD_Analytics = SBD_Analytics;
     ═══════════════════════════════ -->
 
     <!-- Hero AI invite bubble (appears after 3s, disappears when chat opens) -->
-    <div id="heroAiBubble" title="Chat with our AI assistant">
+    <div id="heroAiBubble" onclick="toggleChat(); document.getElementById('heroAiBubble').style.display='none';" title="Chat with our AI assistant">
         <div class="haib-avatar">
             <img src="images/logo.png" onerror="this.style.display='none'" alt="">
         </div>
@@ -7876,10 +7876,10 @@ window.SBD_Analytics = SBD_Analytics;
             <span class="haib-name">Dulce's AI 🎂</span>
             <span class="haib-msg">Need help choosing? Ask me anything!</span>
         </div>
-        <button class="haib-close" id="haibCloseBtn">✕</button>
+        <button class="haib-close" onclick="event.stopPropagation(); document.getElementById('heroAiBubble').style.display='none';">✕</button>
     </div>
 
-    <button id="chatbotBtn" title="Chat with Dulce's AI Assistant 🎂" aria-label="Open chat">
+    <button id="chatbotBtn" onclick="toggleChat()" title="Chat with Dulce's AI Assistant 🎂" aria-label="Open chat">
         <img src="images/logo.png" 
              onerror="this.style.display='none';this.parentNode.innerHTML='🎂'+this.parentNode.innerHTML" 
              alt="Sweets by Dulce">
@@ -7896,7 +7896,7 @@ window.SBD_Analytics = SBD_Analytics;
                     Online &middot; Powered by AI
                 </div>
             </div>
-            <button class="chat-close-btn" id="chatCloseBtn">&#10005;</button>
+            <button class="chat-close-btn" onclick="toggleChat()">&#10005;</button>
         </div>
         <div class="chat-messages" id="chatMessages"></div>
         <div class="chat-quick-btns" id="quickBtns">
@@ -7951,12 +7951,14 @@ PERSONALITY: Be warm, sweet and enthusiastic. Use cake/sweet emojis occasionally
     function toggleChat() {
         chatOpen = !chatOpen;
         const win = document.getElementById('chatWindow');
+        const btn = document.getElementById('chatbotBtn');
         const bubble = document.getElementById('heroAiBubble');
         if (chatOpen) {
             win.style.display = 'flex';
             setTimeout(() => win.classList.add('open'), 10);
-            const notifBadge = document.getElementById('chatNotifBadge');
+            const notifBadge = document.getElementById('chatNotifBadge') || btn.querySelector('.chat-notif');
             if (notifBadge) notifBadge.style.display = 'none';
+            // Hide invite bubble when chat opens
             if (bubble) bubble.style.display = 'none';
             if (chatHistory.length === 0) {
                 setTimeout(() => addBotMessage("Hi! I'm Dulce's assistant 🎂 I can help you choose the perfect dessert, answer questions about our catalog, pricing, or how to order. What can I do for you today?"), 300);
@@ -7968,51 +7970,27 @@ PERSONALITY: Be warm, sweet and enthusiastic. Use cake/sweet emojis occasionally
     }
     window.toggleChat = toggleChat;
 
-    // ── Wire ALL chat buttons here (no inline onclick anywhere) ──
-    (function wireAllChatButtons() {
-        // Main round logo button (bottom right)
-        var mainBtn = document.getElementById('chatbotBtn');
-        if (mainBtn) mainBtn.addEventListener('click', toggleChat);
-
-        // Floating AI button (bottom left)
-        var fabBtn = document.getElementById('floatingAiBtn');
-        if (fabBtn) fabBtn.addEventListener('click', function() {
-            if (!chatOpen) toggleChat();
+    // Attach floating AI button click after function is ready
+    var _fab = document.getElementById('floatingAiBtn');
+    if (_fab) {
+        _fab.addEventListener('click', function() {
+            toggleChat();
             var b = document.getElementById('heroAiBubble');
             if (b) b.style.display = 'none';
         });
+    }
 
-        // Hero invite bubble — click anywhere on bubble opens chat
-        var bubble = document.getElementById('heroAiBubble');
-        if (bubble) bubble.addEventListener('click', function(e) {
-            if (e.target.id === 'haibCloseBtn' || e.target.closest('#haibCloseBtn')) return;
-            if (!chatOpen) toggleChat();
-            bubble.style.display = 'none';
-        });
-
-        // Hero bubble close X button
-        var haibClose = document.getElementById('haibCloseBtn');
-        if (haibClose) haibClose.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var b = document.getElementById('heroAiBubble');
-            if (b) b.style.display = 'none';
-        });
-
-        // Chat window close button
-        var closeBtn = document.getElementById('chatCloseBtn');
-        if (closeBtn) closeBtn.addEventListener('click', toggleChat);
-    })();
-
-    // Show invite bubble after 4s if chat not opened yet
+    // Show invite bubble after 3s if chat hasn't been opened yet
     setTimeout(function() {
         const bubble = document.getElementById('heroAiBubble');
         if (bubble && !chatOpen) {
             bubble.style.display = 'flex';
+            // Auto-hide after 12s if user ignores it
             setTimeout(function() {
-                if (!chatOpen && bubble) bubble.style.display = 'none';
+                if (bubble && !chatOpen) bubble.style.display = 'none';
             }, 12000);
         }
-    }, 4000);
+    }, 3000);
 
     function addBotMessage(text) {
         const msgs = document.getElementById('chatMessages');

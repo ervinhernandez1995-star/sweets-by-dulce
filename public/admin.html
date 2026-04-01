@@ -455,16 +455,19 @@ const PASS='dulce2024';
 const SK='sbd_products';
 const DK='sbd_deleted';
 const AK='sbd_analytics';
+// ── GROQ CONFIG ──
+// ⚠️ IMPORTANT: Groq revokes keys that appear in public GitHub repos.
+// If you get "invalid api key", go to console.groq.com → API Keys → create new key
 const GK='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';
 const GM='llama-3.3-70b-versatile';
 const CL={cakes:'Cakes',cupcakes:'Cupcakes',specialty:'Specialty',holiday:'Special Dates',pies:'Pies & Tarts',drinks:'Drinks'};
 const FB="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>🧁</text></svg>";
-const PGS=50;
+const PGS=18;
 let pg=1,eId=null,upB64=null,aiD=null,acOpen=false,acInit=false,matchData=[];
 
 // ── SUPABASE CONFIG ──
 const SB_URL='https://ybdybhrbtwuzninrgamv.supabase.co';
-const SB_KEY='sb_publishable_T_ycHkSbs3MqiWlh6luhnw_aN2PtFeP';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliZHliaHJidHd1em5pbnJnYW12Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDQ5NjQ2NiwiZXhwIjoyMDkwMDcyNDY2fQ.6A5wzmUJ0tluz32u-LifzzCRFwgmEVvoGNDgDzkAktk';
 const SB_BUCKET='fotos-productos';
 
 function sbFetch(path, opts){
@@ -484,7 +487,7 @@ async function sbUploadImage(file){
 }
 
 async function sbSaveProduct(data){
-  // data: {nombre, descripcion, categoria, precio, imagen_url}
+  // data: {nombre, descripcion, categoria, precio, imagen_url, badge}
   const res=await sbFetch('/rest/v1/productos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(data)});
   if(!res.ok){const e=await res.text();throw new Error('DB error: '+e);}
   return res.json();
@@ -509,20 +512,60 @@ async function sbLoadProducts(){
 
 // ── MIGRATE CATALOG TO SUPABASE ──
 async function migrateCatalog(){
-  if(!confirm('This will upload all 97 catalog products to Supabase. Continue?'))return;
+  // Get existing Supabase products to avoid duplicates
+  let existingNames=new Set();
+  try{
+    const rows=await sbLoadProducts();
+    if(rows&&rows.length) rows.forEach(r=>existingNames.add((r.nombre||'').trim().toLowerCase()));
+  }catch(e){}
+
+  // Combine BASE + custom localStorage products
+  const custom=getC();
+  const allToMigrate=[...BASE];
+  custom.forEach(cp=>{
+    if(!allToMigrate.find(p=>p.id===cp.id)) allToMigrate.push(cp);
+  });
+
+  const newOnes=allToMigrate.filter(p=>!existingNames.has((p.title||'').trim().toLowerCase()));
+  if(!newOnes.length){toast('✅ All products already in Supabase','ok');return;}
+  if(!confirm('Will upload '+newOnes.length+' new products to Supabase (skipping '+
+    (allToMigrate.length-newOnes.length)+' already there). Continue?'))return;
+
   const btn=document.getElementById('migBtn');
   btn.disabled=true;btn.textContent='⏳ Migrating...';
   let ok=0,fail=0;
-  for(const p of BASE){
+
+  for(const p of newOnes){
     try{
-      await sbFetch('/rest/v1/productos',{method:'POST',headers:{'Prefer':'return=minimal'},
-        body:JSON.stringify({nombre:p.title,descripcion:p.description||'',categoria:p.category,precio:p.price||null,imagen_url:p.image||null})
+      const imgUrl=p.image&&!p.image.startsWith('data:')&&!p.image.startsWith('__local:')?p.image:null;
+      const res=await sbFetch('/rest/v1/productos',{
+        method:'POST',
+        headers:{'Prefer':'return=representation'},
+        body:JSON.stringify({
+          nombre:p.title,
+          descripcion:p.description||'',
+          categoria:p.category,
+          precio:p.price||null,
+          imagen_url:imgUrl,
+          badge:p.badge||null
+        })
       });
-      ok++;
-    }catch(e){fail++;}
+      if(res.ok){
+        // Update localStorage entry with the Supabase id
+        const saved=await res.json();
+        if(saved&&saved[0]){
+          const c=getC();
+          const idx=c.findIndex(x=>x.id===p.id);
+          if(idx>=0){c[idx]._sbId=saved[0].id;c[idx]._supabase=true;setC(c);}
+        }
+        ok++;
+      }else fail++;
+    }catch(e){fail++;console.warn('migrate fail',p.title,e);}
   }
+
   btn.disabled=false;btn.textContent='📦 Migrate Catalog';
   toast('✅ Migrated: '+ok+' products'+(fail?' | ⚠️ '+fail+' failed':''),'ok');
+  upS();rl();
 }
 
 // ── BASE CATALOG (subset for admin) ──
@@ -724,17 +767,14 @@ function totV(){return getLog().filter(e=>e.event==='product_view').length;}
 
 // ── INIT ──
 async function init(){
-  // Step 1: Load from products-override.json (survives deploys)
   await autoLoadOverride();
-
-  // Step 2: Try Supabase — if it works, great. If not, silently continue with localStorage
+  // Load from Supabase — source of truth for new products
   try{
     const rows = await sbLoadProducts();
     if(rows && rows.length){
       const c = JSON.parse(localStorage.getItem(SK)||'[]');
       let changed = false;
       rows.forEach(row=>{
-        if(!row.nombre) return; // skip empty rows
         const sp = {
           id: row.id,
           title: row.nombre||'',
@@ -746,30 +786,17 @@ async function init(){
           badge: row.badge||null,
           _custom:true, _sbId: row.id, _supabase:true
         };
+        // Find by supabase id or by title match to avoid duplicates
         const idx = c.findIndex(p=>p._sbId===row.id || p.id===row.id);
         if(idx>=0){ c[idx]={...c[idx],...sp}; changed=true; }
         else{ c.push(sp); changed=true; }
       });
-      if(changed){ try{ localStorage.setItem(SK, JSON.stringify(c)); }catch(e){} }
-      toast('☁️ Cloud sync OK — '+rows.length+' products','ok');
+      if(changed){
+        try{ localStorage.setItem(SK, JSON.stringify(c)); }catch(e){}
+      }
     }
-  }catch(e){
-    // Supabase unavailable — running on local storage only
-    console.warn('Supabase offline, using localStorage');
-  }
-
-  // Step 3: Always render from what we have
+  }catch(e){console.warn('Supabase load error',e);}
   upS();rdash();rl();
-
-  // Step 4: Show sync status in dashboard
-  const custom = getC();
-  if(custom.length > 0){
-    const persistMsg = document.getElementById('persistMsg');
-    if(persistMsg){
-      persistMsg.style.display='block';
-      persistMsg.innerHTML='💾 <strong>'+custom.length+' productos en este dispositivo.</strong> Para verlos en otros dispositivos: exporta el JSON, súbelo al repo como <code>products-override.json</code>.';
-    }
-  }
 }
 
 function sw(t,el){
@@ -806,7 +833,11 @@ async function groq(msgs,tok){
   });
   const d=await r.json();
   if(d.choices&&d.choices[0])return d.choices[0].message.content;
-  throw new Error(d.error&&d.error.message||'Groq error');
+  const errMsg=d.error&&d.error.message||'Groq error';
+  if(r.status===401||errMsg.toLowerCase().includes('invalid')||errMsg.toLowerCase().includes('api key')){
+    throw new Error('🔑 Groq key expired — go to console.groq.com and create a new API key, then update GK in this file');
+  }
+  throw new Error(errMsg);
 }
 
 // ── AI ANALYZE IMAGE ──
@@ -966,7 +997,8 @@ async function saveProd(){
   const saveBtn=document.querySelector('.sb');
   if(saveBtn){saveBtn.disabled=true;saveBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';}
 
-  let imageUrl=document.getElementById('fI').value.trim()||document.getElementById('fImg').value||FB;
+  const pastedUrl=document.getElementById('fI').value.trim();
+  let imageUrl=pastedUrl||FB;
 
   // If there's a local file queued (from drop zone), upload to Supabase Storage
   if(window._pendingUploadFile){
@@ -976,29 +1008,50 @@ async function saveProd(){
       window._pendingUploadFile=null;
       toast('✅ Image uploaded!','ok');
     }catch(e){
-      toast('⚠️ Image upload failed, saving without cloud image','er');
+      toast('⚠️ Image upload failed — using URL or placeholder','er');
+      imageUrl=pastedUrl||FB;
     }
   }
+
+  // Image URL to store in Supabase (never base64)
+  const sbImageUrl=imageUrl.startsWith('data:')?null:imageUrl===FB?null:imageUrl;
+  const badge=document.getElementById('fB').value||null;
+  const desc=document.getElementById('fD').value.trim();
+  const price=document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null;
 
   // Save to Supabase DB
   let sbId=null;
   try{
     const rows=await sbSaveProduct({
       nombre:nm,
-      descripcion:document.getElementById('fD').value.trim(),
+      descripcion:desc,
       categoria:cat,
-      precio:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,
-      imagen_url:imageUrl.startsWith('data:')?null:imageUrl
+      precio:price,
+      imagen_url:sbImageUrl,
+      badge:badge
     });
     if(rows&&rows[0])sbId=rows[0].id;
-    toast('☁️ Saved to Supabase!','ok');
+    toast('☁️ Saved to Supabase — visible on all devices!','ok');
   }catch(e){
-    toast('⚠️ Cloud save failed — saved locally only','er');
+    toast('⚠️ Cloud save failed — saved locally only. Error: '+e.message.slice(0,60),'er');
   }
 
-  // Also save to localStorage as fallback
+  // Save to localStorage as fallback / offline cache
   const c=getC();
-  c.push({id:sbId||Date.now(),title:nm,description:document.getElementById('fD').value.trim(),category:cat,categoryLabel:CL[cat]||cat,price:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,badge:document.getElementById('fB').value||null,image:imageUrl,_custom:true,_added:Date.now(),_sbId:sbId});
+  c.push({
+    id:sbId||Date.now(),
+    title:nm,
+    description:desc,
+    category:cat,
+    categoryLabel:CL[cat]||cat,
+    price:price,
+    badge:badge,
+    image:sbImageUrl||imageUrl,
+    _custom:true,
+    _added:Date.now(),
+    _sbId:sbId,
+    _supabase:!!sbId
+  });
   setC(c);
 
   ['fN','fD','fP','fI','fImg'].forEach(id=>document.getElementById(id).value='');
@@ -1028,18 +1081,15 @@ function rl(){
   if(!paged.length){el.innerHTML='<div class="empty"><div class="ei">🔍</div><p>No products found</p></div>';}
   else el.innerHTML=paged.map(p=>{
     const isC=cids.has(p.id);
-    // Use data-id attribute to safely pass large numeric IDs
-    const idStr=String(p.id);
-    return '<div class="pc'+(isC?' cp':'')+'" data-pid="'+idStr+'">'+
+    return '<div class="pc'+(isC?' cp':'')+'">'+
       '<img class="pi" src="'+h(p.image||FB)+'" onerror="this.src=\''+FB+'\'" alt="">'+
       '<div class="pn"><div class="pna">'+h(p.title)+'</div><div class="pm">'+
         '<span class="mk">'+h(CL[p.category]||p.category)+'</span>'+
         (p.price?'<span class="mk pr">$'+p.price+'</span>':'')+
         (isC?'<span class="mk cu">✏️ Edited</span>':'')+
       '</div></div>'+
-      '<div class="pb">'+
-        '<button class="ab2 ed" data-action="edit" data-id="'+idStr+'" title="Edit"><i class="fas fa-pen"></i></button>'+
-        '<button class="ab2 dl" data-action="del" data-id="'+idStr+'" title="Delete"><i class="fas fa-trash"></i></button>'+
+      '<div class="pb"><button class="ab2 ed" onclick="openEdit('+p.id+')" title="Edit"><i class="fas fa-pen"></i></button>'+
+      '<button class="ab2 dl" onclick="delP('+p.id+')" title="Delete"><i class="fas fa-trash"></i></button>'+
       '</div></div>';
   }).join('');
   rpg(pgs);
@@ -1053,71 +1103,35 @@ function rpg(t){
 }
 function gp(n){pg=n;rl();window.scrollTo(0,0);}
 
-// ── CATALOG BUTTON DELEGATION (handles large numeric IDs safely) ──
-document.addEventListener('click',function(e){
-  const editBtn=e.target.closest('[data-action="edit"]');
-  const delBtn=e.target.closest('[data-action="del"]');
-  if(editBtn){
-    const rawId=editBtn.getAttribute('data-id');
-    // Try as number first, fall back to string match
-    const numId=Number(rawId);
-    const p=merged().find(x=>x.id===numId||String(x.id)===rawId);
-    if(p) openEditProduct(p);
-  }
-  if(delBtn){
-    const rawId=delBtn.getAttribute('data-id');
-    const numId=Number(rawId);
-    delPById(numId,rawId);
-  }
-});
-// Safe ID lookup — handles both small base IDs and large Date.now() IDs
-function findById(id){
-  const numId=typeof id==='string'?Number(id):id;
-  return merged().find(x=>x.id===numId||String(x.id)===String(id));
-}
-function openEditProduct(p){
-  if(!p)return;
-  eId=p.id;
-  document.getElementById('mN').value=p.title||'';
-  document.getElementById('mD').value=p.description||'';
-  document.getElementById('mC').value=p.category||'cakes';
-  document.getElementById('mP').value=p.price||'';
-  document.getElementById('mB').value=p.badge||'';
-  document.getElementById('mI').value=(p.image&&!p.image.startsWith('data:'))?p.image:'';
+// ── EDIT ──
+function openEdit(id){
+  const p=merged().find(x=>x.id===id);if(!p)return;eId=id;
+  document.getElementById('mN').value=p.title||'';document.getElementById('mD').value=p.description||'';
+  document.getElementById('mC').value=p.category||'cakes';document.getElementById('mP').value=p.price||'';
+  document.getElementById('mB').value=p.badge||'';document.getElementById('mI').value=p.image||'';
+  // Reset AI state
   editAiD=null;document.getElementById('eAiR').style.display='none';
   document.getElementById('eOv').classList.add('on');
-}
-function openEdit(id){ openEditProduct(findById(id)); }
-async function delPById(numId,rawId){
-  if(!confirm('Delete this product?'))return;
-  const p=findById(numId)||{};
-  setC(getC().filter(x=>x.id!==numId&&String(x.id)!==rawId));
-  const isBase=BASE.some(x=>x.id===numId);
-  if(isBase){const d=getDeleted();d.add(numId);setDeleted(d);}
-  try{
-    const sbId=p._sbId||numId;
-    if(sbId&&String(sbId).length>6){ await sbDeleteProduct(sbId); toast('☁️ Deleted from Supabase','ok'); }
-  }catch(e){toast('⚠️ Cloud delete failed','er');}
-  upS();rl();toast('🗑️ Deleted','ok');
 }
 function closeEdit(){document.getElementById('eOv').classList.remove('on');eId=null;}
 async function saveEdit(){
   if(!eId)return;const nm=document.getElementById('mN').value.trim();if(!nm){toast('Name required','er');return;}
-  const cat=document.getElementById('mC').value;
-  const c=getC();
-  const i=c.findIndex(p=>p.id===eId||String(p.id)===String(eId));
-  const orig=findById(eId)||{};
+  const cat=document.getElementById('mC').value;const c=getC();const i=c.findIndex(p=>p.id===eId);
+  const orig=merged().find(p=>p.id===eId)||{};
   const newImg=document.getElementById('mI').value.trim()||orig.image;
   const upd={...orig,id:eId,title:nm,description:document.getElementById('mD').value.trim(),category:cat,categoryLabel:CL[cat]||cat,price:document.getElementById('mP').value?parseFloat(document.getElementById('mP').value):null,badge:document.getElementById('mB').value||null,image:newImg,_custom:true};
   if(i>=0)c[i]=upd;else c.push(upd);
   setC(c);
+
+  // Sync to Supabase if it has a DB id
   try{
     const sbId=orig._sbId||eId;
-    if(sbId&&String(sbId).length>6){
+    if(sbId&&String(sbId).length>6){ // Supabase ids are large ints
       await sbUpdateProduct(sbId,{nombre:nm,descripcion:upd.description,categoria:cat,precio:upd.price,imagen_url:newImg&&!newImg.startsWith('data:')?newImg:null});
       toast('☁️ Updated in Supabase!','ok');
     }
   }catch(e){toast('⚠️ Cloud update failed','er');}
+
   upS();rl();closeEdit();toast('✅ Updated!','ok');
 }
 async function delP(id){
