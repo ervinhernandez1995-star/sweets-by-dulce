@@ -6,6 +6,14 @@
       "destination": "/api/chat.js"
     },
     {
+      "source": "/admin",
+      "destination": "/public/admin.html"
+    },
+    {
+      "source": "/images/(.*)",
+      "destination": "/public/images/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/public/$1"
     }
