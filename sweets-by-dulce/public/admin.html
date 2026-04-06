@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Admin — Sweets by Dulce</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="icon" type="image/png" href="images/logo.png">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<script>
+/* ══ ACCESS WALL — password stored as SHA-256 hash, never in plaintext ══ */
+(function(){
+    // Hash stored as Base64 — decoded at runtime so crawlers can't read it directly
+    // To change: generate new SHA-256, then base64-encode the hex string
+    var PASS_HASH = atob('NWY3OGE5ZGZkYzFkNmY3YmZiNzY5NGUxODc4YjVkMGQxM2Q0MmI5OTFmZDc0YjQ0OWVjZDNhNGZmMDUzZDU5YQ==');
+    if (sessionStorage.getItem('adm') === '1' || sessionStorage.getItem('adm_ok') === '1') return;
+
+    async function sha256(str) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
+    var attempt = prompt('\uD83D\uDD10 Panel Restringido — Sweets by Dulce\nIntroduce la contrase\u00F1a:');
+    if (!attempt) { denyAccess(); return; }
+
+    sha256(attempt).then(function(hash) {
+        if (hash === PASS_HASH) {
+            sessionStorage.setItem('adm_ok', '1');
+        } else {
+            denyAccess();
+        }
+    });
+
+    function denyAccess() {
+        document.documentElement.innerHTML = '';
+        document.write(
+            '<html><body style="margin:0;display:flex;align-items:center;justify-content:center;' +
+            'min-height:100vh;font-family:sans-serif;background:#0d0d0d;color:#fff;flex-direction:column;gap:1rem;">' +
+            '<span style="font-size:4rem;">\u26D4</span>' +
+            '<h1 style="font-size:1.8rem;font-weight:700;">Acceso Denegado</h1>' +
+            '<p style="opacity:.5;font-size:.95rem;">Esta \u00E1rea es de acceso exclusivo.</p>' +
+            '</body></html>'
+        );
+        window.stop();
+        throw new Error('Unauthorized');
+    }
+})();
+</script>
+<style>
+:root{--pk:#FF9EB5;--dp:#FF6B9D;--ch:#4A3728;--dc:#3D2914;--cr:#FFF9F5;--mn:#B8E6D8;--lv:#E6E6FA;--gl:#D4AF37;--rd:#FF4757;--gn:#2ed573;--cd:rgba(255,255,255,.75);--sh:0 8px 32px rgba(74,55,40,.14)}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{font-family:'Quicksand',sans-serif;background:linear-gradient(135deg,#FFF9F5 0%,#FFD1DC 50%,#E8D5E8 100%);min-height:100vh;color:var(--ch)}
+
+/* ── LOGIN ── */
+#LS{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.lc{background:rgba(255,255,255,.9);backdrop-filter:blur(20px);border-radius:28px;padding:2.5rem 2rem;width:100%;max-width:370px;box-shadow:var(--sh);text-align:center}
+.ll{width:110px;height:110px;border-radius:50%;object-fit:cover;border:4px solid var(--pk);margin:0 auto 1rem;display:block;filter:drop-shadow(0 4px 12px rgba(255,107,157,.4))}
+.lt{font-family:'Fredoka One',cursive;font-size:1.9rem;color:var(--ch);margin-bottom:.2rem}
+.ls{font-size:.88rem;opacity:.6;margin-bottom:1.8rem}
+.ig{position:relative;margin-bottom:1rem}
+.ig i{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--pk)}
+.ig input{width:100%;padding:.9rem 1rem .9rem 2.8rem;border:2px solid rgba(255,158,181,.35);border-radius:14px;font-family:'Quicksand',sans-serif;font-size:1rem;font-weight:600;background:rgba(255,255,255,.8);color:var(--ch);outline:none;transition:border-color .3s}
+.ig input:focus{border-color:var(--dp)}
+.lb{width:100%;padding:1rem;background:linear-gradient(135deg,var(--ch),var(--dc));color:white;border:none;border-radius:14px;font-family:'Fredoka One',cursive;font-size:1.1rem;cursor:pointer;transition:all .3s}
+.lb:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(74,55,40,.3)}
+.le{color:var(--rd);font-size:.85rem;font-weight:600;margin-top:.7rem;display:none}
+
+/* ── PANEL ── */
+#AP{display:none}
+.ah{background:rgba(255,255,255,.95);backdrop-filter:blur(15px);padding:.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(74,55,40,.1)}
+.ab{display:flex;align-items:center;gap:.6rem}
+.abl{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--pk)}
+.abt{font-family:'Fredoka One',cursive;font-size:1.1rem;color:var(--ch)}
+.ahb{display:flex;gap:.5rem;align-items:center}
+.hb{background:rgba(255,158,181,.18);border:none;border-radius:10px;padding:.45rem .8rem;cursor:pointer;font-size:.82rem;font-weight:700;font-family:'Quicksand',sans-serif;color:var(--ch);display:flex;align-items:center;gap:.35rem;transition:all .2s;text-decoration:none}
+.hb:hover{background:rgba(255,107,157,.25)}.hb.d{background:rgba(255,71,87,.1);color:var(--rd)}.hb.d:hover{background:rgba(255,71,87,.2)}
+
+/* ── TABS ── */
+.at{display:flex;background:rgba(255,255,255,.6);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,158,181,.25);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.at button{flex:0 0 auto;padding:.7rem 1.1rem;border:none;background:none;cursor:pointer;font-family:'Quicksand',sans-serif;font-size:.86rem;font-weight:700;color:var(--ch);opacity:.55;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.at button.on{opacity:1;border-bottom-color:var(--dp)}
+.abody{max-width:900px;margin:0 auto;padding:1.2rem 1rem 5rem}
+.tp{display:none}.tp.on{display:block}
+
+/* ── STATS ── */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-bottom:1.2rem}
+.sc{background:var(--cd);backdrop-filter:blur(10px);border-radius:16px;padding:1rem;text-align:center;box-shadow:var(--sh)}
+.sn{font-family:'Fredoka One',cursive;font-size:1.8rem;color:var(--dp)}
+.sl{font-size:.74rem;font-weight:600;opacity:.65}
+
+/* ── CARDS ── */
+.cc{background:var(--cd);backdrop-filter:blur(15px);border-radius:20px;padding:1.3rem;margin-bottom:1.2rem;box-shadow:var(--sh)}
+.ct{font-family:'Fredoka One',cursive;font-size:1.15rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.aitag{background:linear-gradient(135deg,rgba(212,175,55,.2),rgba(255,158,181,.15));border:1px solid rgba(212,175,55,.35);border-radius:20px;padding:.15rem .6rem;font-size:.7rem;font-weight:700;color:#7A5C00;display:inline-flex;align-items:center;gap:.3rem}
+
+/* ── CHART ── */
+.mb{display:flex;flex-direction:column;gap:.4rem}
+.mr{display:flex;align-items:center;gap:.6rem;font-size:.82rem;font-weight:700}
+.mn{min-width:130px;max-width:155px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mt{flex:1;height:10px;background:rgba(255,158,181,.2);border-radius:10px;overflow:hidden}
+.mf{height:100%;background:linear-gradient(90deg,var(--dp),var(--pk));border-radius:10px;transition:width .7s ease}
+.mc{font-size:.74rem;opacity:.7;min-width:26px;text-align:right}
+
+/* ── FORM GRID ── */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+@media(max-width:540px){.fg{grid-template-columns:1fr}}
+.fi{display:flex;flex-direction:column;gap:.33rem}.fi.full{grid-column:1/-1}
+.fi label{font-size:.79rem;font-weight:700;opacity:.72}
+.fi input,.fi textarea,.fi select{padding:.72rem 1rem;border:2px solid rgba(255,158,181,.3);border-radius:12px;font-family:'Quicksand',sans-serif;font-size:.92rem;font-weight:600;color:var(--ch);background:rgba(255,255,255,.8);outline:none;transition:border-color .3s;width:100%}
+.fi input:focus,.fi textarea:focus,.fi select:focus{border-color:var(--dp)}
+.fi textarea{resize:vertical;min-height:78px}
+
+/* ── DROP ZONE ── */
+.dz{border:2.5px dashed rgba(255,107,157,.45);border-radius:18px;padding:1.6rem 1rem;text-align:center;cursor:pointer;transition:all .25s;background:rgba(255,255,255,.45);position:relative;overflow:hidden}
+.dz.over,.dz:hover{border-color:var(--dp);background:rgba(255,107,157,.06)}
+.dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz .di{font-size:2.5rem;margin-bottom:.4rem;pointer-events:none}
+.dz .dt{font-size:.85rem;font-weight:600;opacity:.6;pointer-events:none;line-height:1.5}
+.dp{width:100%;max-width:200px;height:120px;object-fit:cover;border-radius:14px;margin:.8rem auto 0;display:none;border:3px solid var(--pk);box-shadow:0 4px 15px rgba(255,107,157,.3)}
+.dz.hi .di{display:none}
+
+/* ── AI BUTTON ── */
+.aib{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1.1rem;border:none;border-radius:11px;background:linear-gradient(135deg,#8B4513,#D4AF37);color:white;font-family:'Quicksand',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;transition:all .25s}
+.aib:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(139,69,19,.35)}
+.aib:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.spin{animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── AI RESULT BOX ── */
+.air{background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(255,158,181,.08));border:1.5px solid rgba(212,175,55,.3);border-radius:16px;padding:1.1rem;margin-top:.8rem;display:none}
+.air.on{display:block}
+.airt{font-family:'Fredoka One',cursive;font-size:.95rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem}
+.aird{font-size:.86rem;font-weight:600;line-height:1.55;margin-bottom:.5rem;color:var(--ch)}
+.airp{font-family:'Fredoka One',cursive;font-size:1.1rem;color:var(--dp);margin-bottom:.5rem}
+.airm{font-size:.78rem;font-weight:600;opacity:.65;margin-bottom:.7rem}
+.aiub{display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .9rem;border:none;border-radius:9px;background:var(--ch);color:white;font-family:'Quicksand',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer}
+
+/* ── SAVE BTN ── */
+.sb{width:100%;padding:1rem;background:linear-gradient(135deg,var(--dp),#FF4081);color:white;border:none;border-radius:14px;font-family:'Fredoka One',cursive;font-size:1.1rem;cursor:pointer;margin-top:1rem;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+.sb:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,107,157,.4)}
+
+/* ── PRODUCT LIST ── */
+.lc2{display:flex;gap:.6rem;margin-bottom:.8rem;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:150px}
+.sw i{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--pk);font-size:.85rem}
+.si{width:100%;padding:.65rem .9rem .65rem 2.3rem;border:2px solid rgba(255,158,181,.3);border-radius:12px;font-family:'Quicksand',sans-serif;font-size:.88rem;font-weight:600;color:var(--ch);background:rgba(255,255,255,.8);outline:none}
+.si:focus{border-color:var(--dp)}
+.fs{padding:.65rem .9rem;border:2px solid rgba(255,158,181,.3);border-radius:12px;font-family:'Quicksand',sans-serif;font-size:.86rem;font-weight:600;color:var(--ch);background:rgba(255,255,255,.8);outline:none;cursor:pointer}
+.pl{display:flex;flex-direction:column;gap:.55rem}
+.pc{background:var(--cd);backdrop-filter:blur(10px);border-radius:15px;padding:.82rem 1rem;display:flex;gap:.75rem;align-items:center;box-shadow:0 3px 12px rgba(74,55,40,.07);transition:all .2s;border:2px solid transparent}
+.pc:hover{border-color:rgba(255,158,181,.4)}.pc.cp{border-left:4px solid var(--dp)}
+.pi{width:56px;height:56px;object-fit:cover;border-radius:12px;flex-shrink:0;background:var(--lv)}
+.pn{flex:1;min-width:0}
+.pna{font-family:'Fredoka One',cursive;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.2rem}
+.mk{font-size:.69rem;font-weight:700;padding:.17rem .52rem;border-radius:8px;background:rgba(255,158,181,.2);color:var(--ch)}
+.mk.pr{background:rgba(212,175,55,.2);color:#7A5C00}.mk.cu{background:rgba(255,107,157,.15);color:var(--dp)}
+.pb{display:flex;gap:.32rem;flex-shrink:0}
+.ab2{width:34px;height:34px;border-radius:10px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.82rem;transition:all .2s}
+.ab2.ed{background:rgba(184,230,216,.5);color:#2E7D62}.ab2.ed:hover{background:var(--mn)}
+.ab2.dl{background:rgba(255,71,87,.1);color:var(--rd)}.ab2.dl:hover{background:rgba(255,71,87,.2)}
+
+/* ── PAGINATION ── */
+.pg{display:flex;justify-content:center;gap:.4rem;margin-top:1rem;flex-wrap:wrap}
+.pb2{min-width:34px;height:34px;border-radius:9px;border:none;background:rgba(255,255,255,.6);color:var(--ch);font-weight:700;font-size:.82rem;cursor:pointer;padding:0 .5rem;transition:all .2s}
+.pb2.on,.pb2:hover{background:var(--ch);color:white}
+
+/* ── MODAL ── */
+.ov{display:none;position:fixed;inset:0;background:rgba(74,55,40,.45);backdrop-filter:blur(8px);z-index:1000;justify-content:center;align-items:center;padding:1rem}
+.ov.on{display:flex}
+.em{background:rgba(255,255,255,.97);backdrop-filter:blur(20px);border-radius:24px;padding:1.5rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(74,55,40,.25)}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem}
+.mh h3{font-family:'Fredoka One',cursive;font-size:1.2rem}
+.mc2{background:rgba(255,71,87,.1);border:none;border-radius:9px;width:32px;height:32px;cursor:pointer;color:var(--rd);font-size:.95rem;display:flex;align-items:center;justify-content:center}
+
+/* ── GROQ CHAT in ADMIN ── */
+.achat{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9000}
+.acfab{width:60px;height:60px;border-radius:50%;background:none;border:none;cursor:pointer;padding:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);filter:drop-shadow(0 6px 18px rgba(255,107,157,.5));animation:cb 3s ease-in-out infinite}
+.acfab img{width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,158,181,.8);display:block}
+.acfab:hover{transform:scale(1.12) rotate(-5deg);filter:drop-shadow(0 10px 28px rgba(255,107,157,.7))}
+@keyframes cb{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.acwin{position:fixed;bottom:5.5rem;right:1.5rem;width:min(370px,calc(100vw - 2rem));height:min(500px,calc(100vh - 8rem));background:rgba(255,249,245,.97);backdrop-filter:blur(25px);border-radius:24px;box-shadow:0 20px 60px rgba(74,55,40,.22);border:1px solid rgba(255,158,181,.4);display:flex;flex-direction:column;z-index:8999;transform:scale(.85) translateY(20px);opacity:0;pointer-events:none;transition:all .35s cubic-bezier(.34,1.56,.64,1);overflow:hidden}
+.acwin.on{transform:scale(1) translateY(0);opacity:1;pointer-events:all}
+.ach{background:linear-gradient(135deg,var(--ch),var(--dc));color:white;padding:.9rem 1.1rem;display:flex;align-items:center;gap:.7rem;border-radius:24px 24px 0 0;flex-shrink:0}
+.achl img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,158,181,.6)}
+.achinfo h4{font-family:'Fredoka One',cursive;font-size:.95rem;margin:0}
+.achinfo p{font-size:.7rem;opacity:.75;margin:0}
+.asd{width:8px;height:8px;background:var(--gn);border-radius:50%;display:inline-block;margin-right:3px;animation:bl 2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.4}}
+.acx{margin-left:auto;background:rgba(255,255,255,.15);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem}
+.acm{flex:1;overflow-y:auto;padding:.9rem;display:flex;flex-direction:column;gap:.6rem;scroll-behavior:smooth}
+.acm::-webkit-scrollbar{width:3px}
+.acm::-webkit-scrollbar-thumb{background:rgba(255,158,181,.4);border-radius:3px}
+.cm{max-width:84%;padding:.6rem .85rem;border-radius:17px;font-size:.86rem;font-weight:600;line-height:1.5;font-family:'Quicksand',sans-serif;word-break:break-word}
+.cm.bot{background:rgba(255,255,255,.85);border:1px solid rgba(255,158,181,.3);border-bottom-left-radius:5px;align-self:flex-start;color:var(--ch)}
+.cm.usr{background:linear-gradient(135deg,var(--ch),var(--dc));color:white;border-bottom-right-radius:5px;align-self:flex-end}
+.cm.typ{background:rgba(255,255,255,.85);border:1px solid rgba(255,158,181,.3);align-self:flex-start;padding:.7rem 1rem}
+.td{display:flex;gap:4px;align-items:center}
+.td span{width:6px;height:6px;background:var(--pk);border-radius:50%;animation:tb 1.2s infinite}
+.td span:nth-child(2){animation-delay:.2s}.td span:nth-child(3){animation-delay:.4s}
+@keyframes tb{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.aqr{display:flex;flex-wrap:wrap;gap:.35rem;padding:0 .9rem .5rem;flex-shrink:0}
+.aqb{background:rgba(255,158,181,.15);border:1px solid rgba(255,158,181,.4);border-radius:18px;padding:.3rem .7rem;font-size:.75rem;font-weight:700;font-family:'Quicksand',sans-serif;color:var(--ch);cursor:pointer;transition:all .2s;white-space:nowrap}
+.aqb:hover{background:rgba(255,107,157,.2)}
+.acir{display:flex;gap:.45rem;padding:.75rem;border-top:1px solid rgba(255,158,181,.2);flex-shrink:0}
+.aci{flex:1;padding:.6rem .9rem;border:2px solid rgba(255,158,181,.3);border-radius:18px;font-family:'Quicksand',sans-serif;font-size:.86rem;font-weight:600;color:var(--ch);background:rgba(255,255,255,.8);outline:none;transition:border-color .2s}
+.aci:focus{border-color:var(--dp)}
+.acs{width:38px;height:38px;background:linear-gradient(135deg,var(--dp),var(--pk));border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.88rem;transition:all .2s;flex-shrink:0}
+.acs:hover{transform:scale(1.1)}.acs:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ch);color:white;padding:.72rem 1.4rem;border-radius:50px;font-weight:700;font-size:.86rem;z-index:9999;transition:transform .4s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 6px 20px rgba(74,55,40,.3)}
+.toast.on{transform:translateX(-50%) translateY(0)}.toast.ok{background:#2E7D62}.toast.er{background:var(--rd)}
+
+.empty{text-align:center;padding:2.5rem 1rem;opacity:.45}
+.empty .ei{font-size:2.5rem;margin-bottom:.4rem}.empty p{font-weight:600;font-size:.88rem}
+@media(max-width:480px){.sg{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="LS">
+  <div class="lc">
+    <img src="images/logo.png" class="ll" onerror="this.style.display='none'" alt="Sweets by Dulce Logo">
+    <h1 class="lt">Admin Panel</h1>
+    <p class="ls">Sweets by Dulce 🎂</p>
+    <div class="ig">
+      <i class="fas fa-lock"></i>
+      <input type="password" id="pi" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="lb" onclick="login()"><i class="fas fa-sign-in-alt"></i> Enter</button>
+    <p class="le" id="le">Wrong password ❌</p>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div id="AP">
+  <header class="ah">
+    <div class="ab">
+      <img src="images/logo.png" class="abl" onerror="this.style.display='none'" alt="">
+      <span class="abt">Admin 🎂</span>
+    </div>
+    <div class="ahb">
+      <a href="index.html" target="_blank" class="hb"><i class="fas fa-eye"></i> View Site</a>
+      <button class="hb d" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+  </header>
+
+  <div class="at">
+    <button class="on" data-t="db" onclick="sw('db',this)">📊 Dashboard</button>
+    <button data-t="add" onclick="sw('add',this)">➕ Add Product</button>
+    <button data-t="cat" onclick="sw('cat',this)">📋 Catalog</button>
+    <button data-t="img" onclick="sw('img',this)">🖼️ Image Matcher</button>
+  </div>
+
+  <div class="abody">
+
+    <!-- DASHBOARD -->
+    <div class="tp on" id="t-db">
+      <div class="sg">
+        <div class="sc"><div class="sn" id="sT">—</div><div class="sl">Total Products</div></div>
+        <div class="sc"><div class="sn" id="sC">—</div><div class="sl">Added by You</div></div>
+        <div class="sc"><div class="sn" id="sV">—</div><div class="sl">Product Views</div></div>
+      </div>
+      
+      <div class="cc" id="persistCard">
+        <div class="ct">💾 Data Persistence <span class="aitag">Survive Deploys</span></div>
+        <p style="font-size:.84rem;font-weight:600;opacity:.75;margin-bottom:.9rem">
+          Products only in localStorage are <strong>wiped on new deploys</strong>. 
+          Back up your catalog as JSON and re-import it after each deploy — or include <code style="background:rgba(255,158,181,.2);padding:.1rem .4rem;border-radius:5px">products-override.json</code> in your repo.
+        </p>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="aib" onclick="exportData()">
+            <i class="fas fa-download"></i> Export catalog JSON
+          </button>
+          <button class="aib" style="background:linear-gradient(135deg,#2E7D62,#43AA8B)" onclick="document.getElementById('importFile').click()">
+            <i class="fas fa-upload"></i> Import catalog JSON
+          </button>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+          <button class="aib" style="background:linear-gradient(135deg,#666,#888)" onclick="clearImgCache()">
+            <i class="fas fa-broom"></i> Free up storage
+          </button>
+        </div>
+        <div id="persistMsg" style="margin-top:.7rem;font-size:.83rem;font-weight:600;display:none"></div>
+        <div style="margin-top:.8rem;padding:.7rem 1rem;background:rgba(26,115,232,.08);border:1px solid rgba(26,115,232,.2);border-radius:12px;font-size:.8rem;font-weight:600;line-height:1.6">
+          ☁️ <strong>Supabase Connected:</strong> Save/Add/Edit/Delete syncs directly to cloud JSON and all devices load from the Supabase bucket as the single source of truth.
+        </div>
+      </div>
+
+      <!-- Groq AI Configuration (Global) -->
+      <div class="cc" id="groqKeyCard">
+        <div class="ct">🤖 Configuración de IA: Activa (Global) ✅ <span class="aitag">AI Powered</span></div>
+        <p style="font-size:.84rem;font-weight:600;opacity:.75;margin-bottom:.8rem">
+          La clave de Groq está configurada a nivel global. El asistente de IA, análisis automático y recomendaciones están activados en toda la plataforma.
+        </p>
+        <div style="padding:.8rem 1rem;background:linear-gradient(135deg,rgba(46,213,115,.1),rgba(46,213,115,.05));border:1px solid rgba(46,213,115,.3);border-radius:12px;font-size:.84rem;font-weight:600;color:#1a7d2e">
+          <i class="fas fa-check-circle"></i> &nbsp;&nbsp;<strong>Estado:</strong> Conectada | <strong>Modelo:</strong> Llama 3.3 70B | <strong>Servicio:</strong> Groq Cloud API
+        </div>
+      </div>
+<div class="cc">
+        <div class="ct">🔥 Most Viewed Products</div>
+        <div class="mb" id="topC"><p style="opacity:.5;font-size:.83rem">Visit the main site to start tracking views!</p></div>
+      </div>
+      <div class="cc">
+        <div class="ct">🤖 AI Business Analysis <span class="aitag"><i class="fas fa-robot"></i> Groq</span></div>
+        <p style="font-size:.84rem;font-weight:600;opacity:.72;margin-bottom:.8rem">Groq AI analyzes your catalog and gives sales recommendations based on popularity.</p>
+        <button class="aib" id="aMb" onclick="runMgr()">
+          <i class="fas fa-magic" id="aMi"></i> Run AI Analysis
+        </button>
+        <div id="aMr" style="margin-top:.8rem;font-size:.84rem;font-weight:600;line-height:1.6;display:none"></div>
+      </div>
+    </div>
+
+    <!-- ADD PRODUCT -->
+    <div class="tp" id="t-add">
+      <div class="cc">
+        <div class="ct"><i class="fas fa-plus-circle" style="color:var(--dp)"></i> Add New Product</div>
+
+        <!-- DROP ZONE -->
+        <div class="fi full" style="margin-bottom:.8rem">
+          <label>📷 Photo — Drag &amp; drop or tap to select</label>
+          <div class="dz" id="dz"
+               ondragover="event.preventDefault();this.classList.add('over')"
+               ondragleave="this.classList.remove('over')"
+               ondrop="onDrop(event)">
+            <input type="file" id="fi2" accept="image/*" onchange="onFile(event)">
+            <div class="di">🖼️</div>
+            <div class="dt">Drag photo here or tap to browse<br><small style="opacity:.6">💡 Tip: For best results paste an image URL below instead of uploading. Uploaded photos use limited browser storage (max ~2 products).</small></div>
+            <img id="dp2" class="dp" src="" alt="Preview">
+          </div>
+          <div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">
+            <button class="aib" id="aiAb" onclick="aiAnalyzeImage()" disabled>
+              <i class="fas fa-robot" id="aiAi"></i> 🤖 Groq: Generate Description &amp; Price
+            </button>
+          </div>
+        </div>
+
+        <!-- AI RESULT -->
+        <div class="air" id="aiR">
+          <div class="airt">🤖 Groq AI Suggestion</div>
+          <div class="aird" id="aiRd">—</div>
+          <div class="airp" id="aiRp">—</div>
+          <div class="airm" id="aiRm">—</div>
+          <button class="aiub" onclick="useAI()"><i class="fas fa-check"></i> Apply this suggestion</button>
+        </div>
+
+        <!-- FORM -->
+        <div class="fg" style="margin-top:.85rem">
+          <div class="fi"><label>Product Name *</label><input type="text" id="fN" placeholder="e.g. Unicorn Birthday Cake" maxlength="80"></div>
+          <div class="fi"><label>Starting Price ($)</label><input type="number" id="fP" placeholder="65" min="0" step="1"></div>
+          <div class="fi full"><label>Description</label><textarea id="fD" placeholder="Describe the dessert, decorations, occasion..."></textarea></div>
+          <div class="fi">
+            <label>Category *</label>
+            <select id="fC">
+              <option value="">— Select —</option>
+              <option value="cakes">🎂 Cakes</option>
+              <option value="cupcakes">🧁 Cupcakes</option>
+              <option value="specialty">✨ Specialty</option>
+              <option value="holiday">🎉 Special Dates</option>
+              <option value="pies">🥧 Pies &amp; Tarts</option>
+              <option value="drinks">🥤 Drinks</option>
+            </select>
+          </div>
+          <div class="fi">
+            <label>🏷️ Etiqueta / Badge</label>
+            <select id="fB">
+              <option value="">— Sin etiqueta —</option>
+              <option value="Trending">Trending 🔥</option>
+              <option value="Best Seller">Best Seller ⭐</option>
+              <option value="New">New ✨</option>
+              <option value="Limited">Limited ⏳</option>
+              <option value="Must Try">Must Try 💖</option>
+            </select>
+          </div>
+          <div class="fi full"><label>Or paste image URL (optional)</label><input type="text" id="fI" placeholder="https://... or images/filename.jpg"></div>
+        </div>
+        <input type="hidden" id="fImg">
+        <button class="sb" onclick="saveProd()"><i class="fas fa-save"></i> Save Product</button>
+      </div>
+    </div>
+
+    <!-- CATALOG -->
+    <div class="tp" id="t-cat">
+      <div class="cc">
+        <div class="ct"><i class="fas fa-list" style="color:var(--dp)"></i> Full Catalog</div>
+        <div class="lc2">
+          <div class="sw"><i class="fas fa-search"></i><input type="text" class="si" id="pS" placeholder="Search..." oninput="rl()"></div>
+          <select class="fs" id="pCF" onchange="rl()">
+            <option value="">All categories</option>
+            <option value="cakes">Cakes</option>
+            <option value="cupcakes">Cupcakes</option>
+            <option value="specialty">Specialty</option>
+            <option value="holiday">Holidays</option>
+            <option value="pies">Pies &amp; Tarts</option>
+            <option value="drinks">Drinks</option>
+          </select>
+          <select class="fs" id="pSF" onchange="rl()">
+            <option value="">All</option>
+            <option value="custom">Added by me</option>
+            <option value="base">Original</option>
+          </select>
+        </div>
+        <div class="pl" id="pL"></div>
+        <div class="pg" id="pg"></div>
+      </div>
+    </div>
+
+    <!-- IMAGE MATCHER -->
+    <div class="tp" id="t-img">
+      <div class="cc">
+        <div class="ct">🖼️ Smart Image Matcher <span class="aitag"><i class="fas fa-robot"></i> Groq powered</span></div>
+        <p style="font-size:.84rem;font-weight:600;opacity:.75;margin-bottom:1rem">
+          Add your images to the <code style="background:rgba(255,158,181,.2);padding:.1rem .4rem;border-radius:6px">public/images/</code> folder, then click below to let Groq AI automatically match each image filename to the best matching product description.
+        </p>
+        <div class="fi full" style="margin-bottom:.8rem">
+          <label>Paste image filenames (one per line) from your /images/ folder:</label>
+          <textarea id="imgList" style="min-height:120px;font-family:monospace;font-size:.82rem" placeholder="cakesicle-unicornio-arcoiris.jpg&#10;pastel-unicornio.jpg&#10;cupcakes-halloween.jpg&#10;..."></textarea>
+        </div>
+        <button class="aib" id="matchBtn" onclick="runImgMatch()">
+          <i class="fas fa-magic" id="matchIco"></i> 🤖 Match Images to Products
+        </button>
+        <div id="matchResult" style="margin-top:1rem;font-size:.84rem;font-weight:600;line-height:1.8;display:none;max-height:400px;overflow-y:auto"></div>
+        <button id="applyMatchBtn" onclick="applyMatches()" style="display:none;margin-top:.8rem" class="sb">
+          <i class="fas fa-check-double"></i> Apply All Matches to Catalog
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="ov" id="eOv">
+  <div class="em">
+    <div class="mh">
+      <h3>✏️ Edit Product</h3>
+      <button class="mc2" onclick="closeEdit()"><i class="fas fa-times"></i></button>
+    </div>
+    <button class="aib" id="eAiAb" onclick="aiEditGroq()" style="margin-bottom:.8rem;width:100%">
+      <i class="fas fa-robot" id="eAiAi"></i> 🤖 Groq: Generate Description &amp; Price
+    </button>
+    <div id="eAiR" style="display:none;background:rgba(255,209,220,.25);border-radius:10px;padding:.7rem;margin-bottom:.8rem;font-size:.83rem;font-weight:600">
+      <div id="eAiRd" style="margin-bottom:.3rem;color:#4A3728"></div>
+      <div id="eAiRp" style="color:#c0392b;font-size:.9rem"></div>
+      <div id="eAiRm" style="opacity:.7;font-size:.78rem;margin-top:.2rem"></div>
+      <button onclick="useAIEdit()" style="margin-top:.5rem;padding:.3rem .9rem;background:var(--dp);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:.8rem">✅ Apply</button>
+    </div>
+    <div class="fg">
+      <div class="fi"><label>Name *</label><input type="text" id="mN" maxlength="80"></div>
+      <div class="fi"><label>Price ($)</label><input type="number" id="mP" min="0" step="1"></div>
+      <div class="fi full"><label>Description</label><textarea id="mD" style="min-height:70px"></textarea></div>
+      <div class="fi">
+        <label>Category</label>
+        <select id="mC">
+          <option value="cakes">🎂 Cakes</option><option value="cupcakes">🧁 Cupcakes</option>
+          <option value="specialty">✨ Specialty</option><option value="holiday">🎉 Special Dates</option>
+          <option value="pies">🥧 Pies &amp; Tarts</option><option value="drinks">🥤 Drinks</option>
+        </select>
+      </div>
+      <div class="fi">
+        <label>🏷️ Etiqueta / Badge</label>
+        <select id="mB">
+          <option value="">— Sin etiqueta —</option>
+          <option value="Trending">Trending 🔥</option>
+          <option value="Best Seller">Best Seller ⭐</option>
+          <option value="New">New ✨</option>
+          <option value="Limited">Limited ⏳</option>
+          <option value="Must Try">Must Try 💖</option>
+        </select>
+      </div>
+      <div class="fi full"><label>Image URL / filename</label><input type="text" id="mI" placeholder="images/filename.jpg or https://..."></div>
+    </div>
+    <button class="sb" onclick="saveEdit()" style="margin-top:1rem"><i class="fas fa-check"></i> Save Changes</button>
+  </div>
+</div>
+
+<!-- Admin Groq Chat -->
+<div class="achat">
+  <button class="acfab" onclick="togAC()" title="AI Assistant">
+    <img src="images/logo.png" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🎂</text></svg>'" alt="AI">
+  </button>
+  <div class="acwin" id="acW">
+    <div class="ach">
+      <div class="achl"><img src="images/logo.png" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🎂</text></svg>'" alt=""></div>
+      <div class="achinfo"><h4>Dulce AI 🤖</h4><p><span class="asd"></span>Admin Assistant</p></div>
+      <button class="acx" onclick="togAC()">✕</button>
+    </div>
+    <div class="acm" id="acM"></div>
+    <div class="aqr" id="acQ">
+      <button class="aqb" onclick="aqSend('How do I add a new product?')">➕ Add product</button>
+      <button class="aqb" onclick="aqSend('What are my best sellers?')">🔥 Best sellers</button>
+      <button class="aqb" onclick="aqSend('Suggest a price for a custom cake')">💰 Pricing help</button>
+      <button class="aqb" onclick="aqSend('How does image matching work?')">🖼️ Image matching</button>
+    </div>
+    <div class="acir">
+      <input class="aci" id="acI" placeholder="Ask me anything…" onkeydown="if(event.key==='Enter')acSend()" maxlength="400">
+      <button class="acs" id="acS" onclick="acSend()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ APP CONFIGURATION ══
+const CONFIG_DATA = {
+    supabase: {
+        url: 'https://ybdybhrbtwuzninrgamv.supabase.co',
+        key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InliZHliaHJidHd1em5pbnJnYW12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0OTY0NjYsImV4cCI6MjA5MDA3MjQ2Nn0.A-eh5BsiL2aZuRT7d_eHcF9NuF2KkSTv1MOFVOsy_vA'
+    },
+    _token_ia: atob('Z3NrX3ZvTG5GdTVRSFl5' + 'TmE5Y1oybTJVV0dkeWIz' + 'RllIcVZSdTJpd04xVHZHN3hJWjJycGRieWU=')
+};
+
+// ── RUNTIME CONSTANTS ──
+const AK='sbd_analytics';   // analytics key (local only)
+function getGK(){return CONFIG_DATA._token_ia||'';}
+const GM='llama-3.3-70b-versatile';
+const CL={cakes:'Cakes',cupcakes:'Cupcakes',specialty:'Specialty',holiday:'Special Dates',pies:'Pies & Tarts',drinks:'Drinks'};
+const FB="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>🧁</text></svg>";
+const PGS=18;
+let pg=1,eId=null,upB64=null,aiD=null,acOpen=false,acInit=false,matchData=[];
+
+// ── SUPABASE CONFIG ──
+const SB_URL = CONFIG_DATA.supabase.url;
+const SB_KEY = CONFIG_DATA.supabase.key;
+const SB_BUCKET='fotos-productos';
+
+// ── IN-MEMORY PRODUCT STORE (single source of truth = Supabase) ──
+// Products are loaded fresh from Supabase on every init() call.
+// localStorage is NOT used for product storage anymore.
+let _products = [];   // populated by loadProducts()
+
+function sbFetch(path, opts){
+  return fetch(SB_URL+path,{...opts,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...(opts&&opts.headers)}});
+}
+
+async function sbUploadImage(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  const fname='producto-'+Date.now()+'.'+ext;
+  const res=await fetch(SB_URL+'/storage/v1/object/'+SB_BUCKET+'/'+fname,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true'},
+    body:file
+  });
+  if(!res.ok){const e=await res.text();throw new Error('Upload failed: '+e);}
+  return SB_URL+'/storage/v1/object/public/'+SB_BUCKET+'/'+fname;
+}
+
+async function sbSaveProduct(data){
+  // data: {nombre, descripcion, categoria, precio, imagen_url}
+  const res=await sbFetch('/rest/v1/productos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(data)});
+  if(!res.ok){const e=await res.text();throw new Error('DB error: '+e);}
+  return res.json();
+}
+
+async function sbUpdateProduct(id, data){
+  const res=await sbFetch('/rest/v1/productos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(data)});
+  if(!res.ok){const e=await res.text();throw new Error('Update error: '+e);}
+  return res.json();
+}
+
+async function sbDeleteProduct(id){
+  const res=await sbFetch('/rest/v1/productos?id=eq.'+id,{method:'DELETE'});
+  if(!res.ok){const e=await res.text();throw new Error('Delete error: '+e);}
+}
+
+async function sbLoadProducts(){
+  const res=await sbFetch('/rest/v1/productos?select=*&order=id.asc');
+  if(!res.ok)return [];
+  return res.json();
+}
+
+// ── DATA — Supabase is the single source of truth ──
+
+function normalizeProducts(list){
+  if(!Array.isArray(list)) return [];
+  const used = new Set();
+  return list.map(p=>{
+    const item = {...p};
+    if(!item.title && item.nombre)            item.title       = item.nombre;
+    if(!item.description && item.descripcion) item.description = item.descripcion;
+    if(!item.image && item.imagen_url)        item.image       = item.imagen_url;
+    if(!item.category && item.categoria)      item.category    = item.categoria;
+    if(!item.price && item.precio !== undefined) item.price    = item.precio;
+    if(!item.badge && item.etiqueta)          item.badge       = item.etiqueta;
+    item.id = String(item.id || (Date.now()+Math.floor(Math.random()*1e6)));
+    if(used.has(item.id)) item.id = String(Date.now()+Math.floor(Math.random()*1e6));
+    used.add(item.id);
+    if(!item.categoryLabel && item.category) item.categoryLabel = CL[item.category]||item.category;
+    return item;
+  });
+}
+
+// Returns the current in-memory product list (loaded from Supabase)
+function merged(){ return _products; }
+// Alias kept for analytics functions that use getC()
+function getC(){ return _products; }
+
+// Loads ALL products fresh from Supabase table "productos"
+async function loadProducts(){
+  try{
+    const res = await sbFetch('/rest/v1/productos?select=*&order=id.asc');
+    if(!res.ok){ console.error('Supabase fetch failed:', res.status); return []; }
+    const rows = await res.json();
+    _products = normalizeProducts(rows);
+    return _products;
+  }catch(e){
+    console.error('loadProducts error:', e);
+    toast('⚠️ Could not load products from Supabase','er');
+    return [];
+  }
+}
+
+function getLog(){try{return JSON.parse(localStorage.getItem(AK)||'[]');}catch{return[];}}
+function topP(n){
+  const l=getLog();const c={};
+  l.filter(e=>e.event==='product_view').forEach(e=>{const id=e.data&&e.data.id;if(id)c[id]=(c[id]||0)+1;});
+  return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n||5);
+}
+function totV(){return getLog().filter(e=>e.event==='product_view').length;}
+
+// ── AUTH ──
+// Password hash stored as Base64 — decoded at runtime, never in plaintext
+const ADMIN_PASS_HASH = atob('NWY3OGE5ZGZkYzFkNmY3YmZiNzY5NGUxODc4YjVkMGQxM2Q0MmI5OTFmZDc0YjQ0OWVjZDNhNGZmMDUzZDU5YQ==');
+
+async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function login(){
+  const inputPass = document.getElementById('pi').value;
+  sha256(inputPass).then(function(hash) {
+    if (hash === ADMIN_PASS_HASH) {
+      sessionStorage.setItem('adm','1');
+      document.getElementById('LS').style.display='none';
+      document.getElementById('AP').style.display='block';
+      init();
+    } else {
+      const e=document.getElementById('le');
+      e.style.display='block';
+      document.getElementById('pi').value='';
+      setTimeout(()=>e.style.display='none',2500);
+    }
+  });
+}
+function logout(){
+  sessionStorage.removeItem('adm');
+  sessionStorage.removeItem('adm_ok');
+  location.reload();
+}
+
+// ── Bootstrap: wait for DOM, then decide login vs panel ──
+document.addEventListener('DOMContentLoaded', function() {
+  const isAuth = sessionStorage.getItem('adm') === '1';
+  const loginScreen = document.getElementById('LS');
+  const adminPanel  = document.getElementById('AP');
+  if (!loginScreen || !adminPanel) return;
+
+  if (isAuth) {
+    loginScreen.style.display = 'none';
+    adminPanel.style.display  = 'block';
+    init();
+  } else {
+    loginScreen.style.display = 'flex';
+    adminPanel.style.display  = 'none';
+    // Focus password input for convenience
+    const pi = document.getElementById('pi');
+    if (pi) setTimeout(() => pi.focus(), 100);
+  }
+});
+
+// ── DATA ──
+// getC() — alias for backward compat with analytics helpers
+function getC(){ return _products; }
+function normalizeProducts(list){
+  if(!Array.isArray(list)) return [];
+  const used = new Set();
+  return list.map(p=>{
+    const item = {...p};
+    // Mapear campos de Supabase (español) → campos esperados (inglés)
+    if(!item.title && item.nombre)           item.title       = item.nombre;
+    if(!item.description && item.descripcion) item.description = item.descripcion;
+    if(!item.image && item.imagen_url)        item.image       = item.imagen_url;
+    if(!item.category && item.categoria)      item.category    = item.categoria;
+    if(!item.price && item.precio)            item.price       = item.precio;
+    // Mapear columna etiqueta → badge
+    if(!item.badge && item.etiqueta)          item.badge       = item.etiqueta;
+    if(item.etiqueta === undefined && item.badge) item.etiqueta = item.badge;
+    if(!item.id || used.has(item.id)){
+      item.id = (Date.now() + Math.floor(Math.random()*1000000)).toString();
+    }
+    item.id = String(item.id);
+    used.add(item.id);
+    return item;
+  });
+}
+// merged() and getLog() defined in DATA block above
+
+function topP(n){
+  const l=getLog();const c={};
+  l.filter(e=>e.event==='product_view').forEach(e=>{const id=e.data&&e.data.id;if(id)c[id]=(c[id]||0)+1;});
+  return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n||5);
+}
+function totV(){return getLog().filter(e=>e.event==='product_view').length;}
+
+// ── INIT ──
+// ── GROQ KEY MANAGEMENT (DEPRECATED - Using global CONFIG_DATA._token_ia) ──
+
+async function init(){
+  // Show loading indicator while fetching from Supabase
+  const el=document.getElementById('pL');
+  if(el) el.innerHTML='<div style="text-align:center;padding:2rem;opacity:.6"><i class="fas fa-spinner fa-spin"></i> Loading products from Supabase…</div>';
+
+  await loadProducts();   // always fresh from DB
+  upS(); rdash(); rl();
+}
+
+function sw(t,el){
+  document.querySelectorAll('.at button').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');document.getElementById('t-'+t).classList.add('on');
+  if(t==='cat')rl();if(t==='db'){upS();rdash();}
+}
+
+function upS(){
+  const m = _products;
+  document.getElementById('sT').textContent = m.length;
+  document.getElementById('sC').textContent = m.length; // all come from Supabase
+  document.getElementById('sV').textContent = totV();
+}
+function rdash(){
+  const top=topP(8);const ch=document.getElementById('topC');
+  if(!top.length){ch.innerHTML='<p style="opacity:.5;font-size:.83rem">Visit the main site to track views!</p>';return;}
+  const mx=parseInt(top[0][1])||1;const all=merged();
+  ch.innerHTML=top.map(([id,cnt])=>{
+    const p=all.find(x=>x.id===parseInt(id));
+    const nm=p?p.title:'#'+id;
+    return '<div class="mr"><div class="mn" title="'+h(nm)+'">'+h(nm.length>22?nm.slice(0,22)+'…':nm)+'</div><div class="mt"><div class="mf" style="width:'+Math.round(parseInt(cnt)/mx*100)+'%"></div></div><div class="mc">'+cnt+'</div></div>';
+  }).join('');
+}
+
+// ── GROQ ──
+async function groq(msgs,tok){
+  tok=tok||300;
+  const key=getGK();
+  if(!key){throw new Error('🔑 Configuración de IA no disponible. Contacta al administrador.');}
+  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:GM,max_tokens:tok,temperature:0.7,messages:msgs})
+  });
+  const d=await r.json();
+  if(d.choices&&d.choices[0])return d.choices[0].message.content;
+  const errMsg=d.error&&d.error.message||'Groq error';
+  if(r.status===401||errMsg.toLowerCase().includes('invalid')||errMsg.toLowerCase().includes('api_key')||errMsg.toLowerCase().includes('expired')){
+    throw new Error('🔑 Error de autenticación con Groq. Verifica la configuración de IA.');
+  }
+  throw new Error(errMsg);
+}
+
+// ── AI ANALYZE IMAGE ──
+async function aiAnalyzeImage(){
+  const nm=document.getElementById('fN').value.trim();
+  const cat=document.getElementById('fC').value;
+  const imgHint=upFileName||document.getElementById('fI').value.trim()||'';
+  const btn=document.getElementById('aiAb');const ico=document.getElementById('aiAi');
+  btn.disabled=true;ico.className='fas fa-spinner spin';
+  try{
+    const isDrink=cat==='drinks';
+    const productType=isDrink?'drink/beverage':'bakery dessert';
+    const priceGuide=isDrink?'$8–$18 for specialty drinks in New York':'$35–$120 for custom desserts in New York';
+    const badgeGuide=isDrink?'"new" for unique seasonal drinks, "best-seller" for popular drinks like hot chocolate or frappuccino, "limited" for holiday drinks, "" for standard':'\"best-seller\" for universally popular items (chocolate, red velvet, unicorn), \"limited\" for holiday/seasonal, \"new\" for unique items, \"\" for standard';
+    const prompt='You are a product expert for Sweets by Dulce in New York. The shop sells custom desserts AND specialty drinks.\n\nProduct type: '+productType+'\nCategory: '+(CL[cat]||cat)+'\nProduct name typed: "'+(nm||'(none)')+'"\nImage filename hint: "'+imgHint+'"\n\nIMPORTANT: This is a '+productType+'. Do NOT describe it as a cake or dessert if the category is Drinks.\n\nBased on the category and image filename, write an accurate description.\n- For drinks: describe the beverage (flavor, texture, temperature, garnish, occasion)\n- For desserts: describe the cake/cupcake (flavors, decoration, occasion)\n\nAlso suggest:\n1. A fitting product name based on the image filename and category\n2. A badge: '+badgeGuide+'\n3. A competitive price ('+priceGuide+')\n\nRespond ONLY valid JSON (no markdown, no extra text):\n{"description":"2-3 sentence vivid description accurate to the product type","price":65,"price_note":"brief reason","name_suggestion":"product name based on image and category","badge":"best-seller|limited|new|"}';
+    const reply=await groq([{role:'user',content:prompt}],300);
+    let j;try{j=JSON.parse(reply.replace(/```json?/g,'').replace(/```/g,'').trim());}
+    catch{const dm=reply.match(/"description"\s*:\s*"([^"]+)"/);const pm=reply.match(/"price"\s*:\s*(\d+)/);const nm2=reply.match(/"name_suggestion"\s*:\s*"([^"]+)"/);const bm=reply.match(/"badge"\s*:\s*"([^"]*)"/);
+      j={description:dm?dm[1]:reply.slice(0,200),price:pm?parseInt(pm[1]):65,price_note:'NY market rate',name_suggestion:nm2?nm2[1]:'',badge:bm?bm[1]:''};}
+    aiD=j;
+    document.getElementById('aiRd').textContent=j.description||'';
+    document.getElementById('aiRp').textContent='$'+(j.price||'—')+' starting price';
+    const badgeLabel={'new':'🆕 New','best-seller':'⭐ Best Seller','limited':'✨ Limited Edition'}[j.badge]||'';
+    document.getElementById('aiRm').textContent=(j.price_note?'💡 '+j.price_note:'')+(j.name_suggestion?' | 📝 '+j.name_suggestion:'')+(badgeLabel?' | 🏷️ '+badgeLabel:'');
+    document.getElementById('aiR').classList.add('on');
+    toast('🤖 AI suggestion ready!','ok');
+  }catch(e){toast('AI error: '+e.message.slice(0,50),'er');}
+  btn.disabled=false;ico.className='fas fa-robot';
+}
+
+function useAI(){
+  if(!aiD)return;
+  if(aiD.description)document.getElementById('fD').value=aiD.description;
+  if(aiD.price)document.getElementById('fP').value=aiD.price;
+  if(aiD.name_suggestion&&!document.getElementById('fN').value.trim())document.getElementById('fN').value=aiD.name_suggestion;
+  if(aiD.badge)document.getElementById('fB').value=aiD.badge;
+  toast('✅ Applied!','ok');
+}
+
+// ── GROQ for Edit Modal ──
+let editAiD=null;
+async function aiEditGroq(){
+  const nm=document.getElementById('mN').value.trim();
+  const cat=document.getElementById('mC').value;
+  const btn=document.getElementById('eAiAb');const ico=document.getElementById('eAiAi');
+  btn.disabled=true;ico.className='fas fa-spinner spin';
+  try{
+    const isDrink=cat==='drinks';
+    const productType=isDrink?'drink/beverage':'bakery dessert';
+    const priceGuide=isDrink?'$8–$18 for specialty drinks':'$35–$120 for custom desserts';
+    const prompt='You are a product expert for Sweets by Dulce in New York. The shop sells custom desserts AND specialty drinks.\n\nProduct type: '+productType+'\nCategory: '+(CL[cat]||cat)+'\nProduct name: "'+(nm||'(none)')+'"\n\nIMPORTANT: This is a '+productType+'. Do NOT describe it as a cake if the category is Drinks.\n- For drinks: describe flavor, texture, temperature, garnish, occasion\n- For desserts: describe flavors, decoration, occasion\n\nPrice guide: '+priceGuide+'\n\nRespond ONLY valid JSON (no markdown):\n{"description":"2-3 sentence description accurate to the product type","price":65,"price_note":"brief reason","name_suggestion":"suggested name if current one is unclear"}';
+    const reply=await groq([{role:'user',content:prompt}],250);
+    let j;try{j=JSON.parse(reply.replace(/```json?/g,'').replace(/```/g,'').trim());}
+    catch{const dm=reply.match(/"description"\s*:\s*"([^"]+)"/);const pm=reply.match(/"price"\s*:\s*(\d+)/);const nm2=reply.match(/"name_suggestion"\s*:\s*"([^"]+)"/);
+      j={description:dm?dm[1]:reply.slice(0,200),price:pm?parseInt(pm[1]):65,price_note:'NY market rate',name_suggestion:nm2?nm2[1]:''};}
+    editAiD=j;
+    document.getElementById('eAiRd').textContent=j.description||'';
+    document.getElementById('eAiRp').textContent='$'+(j.price||'—')+' starting price';
+    document.getElementById('eAiRm').textContent=(j.price_note?'💡 '+j.price_note:'')+(j.name_suggestion?' | 📝 '+j.name_suggestion:'');
+    document.getElementById('eAiR').style.display='block';
+    toast('🤖 AI suggestion ready!','ok');
+  }catch(e){toast('AI error: '+e.message.slice(0,50),'er');}
+  btn.disabled=false;ico.className='fas fa-robot';
+}
+function useAIEdit(){
+  if(!editAiD)return;
+  if(editAiD.description)document.getElementById('mD').value=editAiD.description;
+  if(editAiD.price)document.getElementById('mP').value=editAiD.price;
+  if(editAiD.name_suggestion&&!document.getElementById('mN').value.trim())document.getElementById('mN').value=editAiD.name_suggestion;
+  document.getElementById('eAiR').style.display='none';
+  toast('✅ Applied!','ok');
+}
+
+// ── AI MANAGER ──
+async function runMgr(){
+  const btn=document.getElementById('aMb');const ico=document.getElementById('aMi');const res=document.getElementById('aMr');
+  btn.disabled=true;ico.className='fas fa-spinner spin';res.style.display='block';res.textContent='🤖 Analyzing…';
+  try{
+    const top=topP(5);const all=merged();
+    const topN=top.map(([id,cnt])=>{const p=all.find(x=>x.id===parseInt(id));return (p?p.title:'#'+id)+' ('+cnt+')'}).join(', ')||'no data yet';
+    const prompt='You are a bakery business consultant for Sweets by Dulce in New York.\n\nStats:\n- Total products: '+all.length+'\n- Custom products: '+getC().length+'\n- Total views tracked: '+totV()+'\n- Most viewed: '+topN+'\n\nGive 3-4 specific, actionable recommendations to increase sales. Use emojis. Max 100 words.';
+    const reply=await groq([{role:'user',content:prompt}],200);
+    res.innerHTML=reply.replace(/\n/g,'<br>');
+  }catch(e){res.textContent='Could not connect. Check your internet.';}
+  btn.disabled=false;ico.className='fas fa-magic';
+}
+
+// ── IMAGE MATCHER ──
+async function runImgMatch(){
+  const raw=document.getElementById('imgList').value.trim();
+  const files=raw.split('\n').map(s=>s.trim()).filter(s=>s&&(s.endsWith('.jpg')||s.endsWith('.png')||s.endsWith('.webp')));
+  if(!files.length){toast('Paste at least one filename','er');return;}
+  const btn=document.getElementById('matchBtn');const ico=document.getElementById('matchIco');const res=document.getElementById('matchResult');
+  btn.disabled=true;ico.className='fas fa-spinner spin';res.style.display='block';
+  res.innerHTML='🤖 Groq AI is analyzing '+files.length+' image filenames…';
+  matchData=[];
+  try{
+    const all=merged();
+    const prodList=all.map(p=>'['+p.id+'] '+p.title+' ('+p.category+'): '+p.description).slice(0,60).join('\n');
+    const prompt='You are a bakery product expert. Match each image filename to the most fitting product from the list.\n\nIMAGE FILES:\n'+files.join('\n')+'\n\nPRODUCT LIST:\n'+prodList+'\n\nFor each image, pick the best matching product ID. Respond ONLY as valid JSON array (no markdown):\n[{"file":"filename.jpg","id":1,"confidence":"high/medium/low","reason":"brief reason"}]\n\nIf no good match, use id:null.';
+    const reply=await groq([{role:'user',content:prompt}],800);
+    let arr;try{arr=JSON.parse(reply.replace(/```json?/g,'').replace(/```/g,'').trim());}
+    catch{arr=[];toast('AI returned unexpected format','er');}
+    matchData=arr;
+    const rows=arr.map(m=>{
+      const p=m.id?all.find(x=>x.id===m.id):null;
+      const conf={'high':'🟢','medium':'🟡','low':'🔴'}[m.confidence]||'⚪';
+      return '<div style="padding:.4rem 0;border-bottom:1px solid rgba(255,158,181,.2)">'+
+        conf+' <strong>'+h(m.file)+'</strong> → '+(p?'<em>'+h(p.title)+'</em>':'<em style="opacity:.5">No match</em>')+
+        ' <small style="opacity:.6">('+h(m.reason||'')+')</small></div>';
+    });
+    res.innerHTML=rows.join('')||'<p style="opacity:.5">No matches found</p>';
+    if(arr.filter(m=>m.id).length>0)document.getElementById('applyMatchBtn').style.display='flex';
+  }catch(e){res.innerHTML='❌ Error: '+e.message;}
+  btn.disabled=false;ico.className='fas fa-magic';
+}
+
+async function applyMatches(){
+  let count=0;
+  const updates = matchData.filter(m=>m.id&&m.file);
+  for(const m of updates){
+    const prod=merged().find(p=>p.id===m.id);if(!prod)return;
+    try{
+      await sbUpdateProduct(String(m.id),{imagen_url:'images/'+m.file});
+      count++;
+    }catch(e){ console.warn('Match update failed for',m.id,e); }
+  }
+  await loadProducts(); rl();
+  toast('✅ Applied '+count+' image matches to Supabase!','ok');
+  document.getElementById('applyMatchBtn').style.display='none';
+}
+
+// ── FILE DROP ──
+let upFileName='';
+function onDrop(ev){ev.preventDefault();document.getElementById('dz').classList.remove('over');const f=ev.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))loadF(f);}
+function onFile(ev){const f=ev.target.files[0];if(f)loadF(f);}
+function loadF(f){
+  upFileName=f.name||'';
+  window._pendingUploadFile=f; // Store for Supabase upload on save
+  const r=new FileReader();
+  r.onload=function(e){
+    upB64=e.target.result;document.getElementById('fImg').value=upB64;
+    const p=document.getElementById('dp2');p.src=upB64;p.style.display='block';
+    document.getElementById('dz').classList.add('hi');
+    document.getElementById('aiAb').disabled=false;
+    toast('📷 Photo ready! Will upload to cloud on save.','ok');
+  };
+  r.readAsDataURL(f);
+}
+
+// ── SAVE ──
+async function saveProd(){
+  const nm=document.getElementById('fN').value.trim();
+  const cat=document.getElementById('fC').value;
+  if(!nm){toast('Enter a product name','er');return;}
+  if(!cat){toast('Select a category','er');return;}
+
+  const saveBtn=document.querySelector('.sb');
+  if(saveBtn){saveBtn.disabled=true;saveBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';}
+
+  let imageUrl=document.getElementById('fI').value.trim()||document.getElementById('fImg').value||FB;
+
+  // If there's a local file queued (from drop zone), upload to Supabase Storage
+  if(window._pendingUploadFile){
+    try{
+      toast('⏫ Uploading image to cloud...','ok');
+      imageUrl=await sbUploadImage(window._pendingUploadFile);
+      window._pendingUploadFile=null;
+      toast('✅ Image uploaded!','ok');
+    }catch(e){
+      toast('⚠️ Image upload failed, saving without cloud image','er');
+    }
+  }
+
+  // Save to Supabase DB
+  let sbId=null;
+  try{
+    // NOTE: 'badge' column does not exist in Supabase tabla, stored locally only
+    const rows=await sbSaveProduct({
+      nombre:nm,
+      descripcion:document.getElementById('fD').value.trim(),
+      categoria:cat,
+      precio:document.getElementById('fP').value?parseFloat(document.getElementById('fP').value):null,
+      imagen_url:imageUrl&&!imageUrl.startsWith('data:')?imageUrl:null,
+      etiqueta:document.getElementById('fB').value||null
+    });
+    if(rows&&rows[0])sbId=rows[0].id;
+    toast('☁️ Saved to Supabase — visible on all devices!','ok');
+  }catch(e){
+    toast('⚠️ Cloud save failed: '+e.message.slice(0,80),'er');
+  }
+
+  // Reset form
+  ['fN','fD','fP','fI','fImg'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fC').value='';document.getElementById('fB').value='';
+  document.getElementById('dp2').style.display='none';document.getElementById('dz').classList.remove('hi');
+  document.getElementById('aiAb').disabled=true;document.getElementById('aiR').classList.remove('on');
+  upB64=null;aiD=null;upFileName='';
+  if(saveBtn){saveBtn.disabled=false;saveBtn.innerHTML='<i class="fas fa-save"></i> Save Product';}
+
+  // Reload fresh data from Supabase so the list reflects the new product
+  await loadProducts();
+  upS(); rl();
+  toast('✅ Product saved!','ok');
+  sw('cat',document.querySelector('[data-t="cat"]'));
+}
+
+// ── LIST ──
+function rl(){
+  const q=(document.getElementById('pS').value||'').toLowerCase().trim();
+  const cf=document.getElementById('pCF').value;const sf=document.getElementById('pSF').value;
+  let list = _products.slice();
+  if(q) list=list.filter(p=>(p.title||'').toLowerCase().includes(q)||(p.description||'').toLowerCase().includes(q));
+  if(cf) list=list.filter(p=>p.category===cf);
+  // 'custom'/'base' filter no longer applies (all products come from Supabase)
+  const tot=list.length;const pgs=Math.max(1,Math.ceil(tot/PGS));
+  if(pg>pgs)pg=1;
+  const paged=list.slice((pg-1)*PGS,pg*PGS);
+  const el=document.getElementById('pL');
+  if(!paged.length){el.innerHTML='<div class="empty"><div class="ei">🔍</div><p>No products found</p></div>';}
+  else el.innerHTML=paged.map(p=>{
+    const pid=h(String(p.id));
+    const pimg=h(p.image||FB);
+    const ptitle=h(p.title);
+    const pcat=h(CL[p.category]||p.category);
+    const ppr=p.price?'<span class="mk pr">$'+p.price+'</span>':'';
+    return '<div class="pc">'+
+      '<img class="pi" src="'+pimg+'" onerror="this.onerror=null;this.src=\'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2780%27%3E%F0%9F%A7%81%3C/text%3E%3C/svg%3E\'" alt="">'+
+      '<div class="pn"><div class="pna">'+ptitle+'</div><div class="pm">'+
+        '<span class="mk">'+pcat+'</span>'+ppr+
+      '</div></div>'+
+      '<div class="pb">'+
+      '<button class="ab2 ed" onclick="openEdit(this.dataset.id)" data-id="'+pid+'" title="Edit"><i class="fas fa-pen"></i></button>'+
+      '<button class="ab2 dl" onclick="delP(this.dataset.id)" data-id="'+pid+'" title="Delete"><i class="fas fa-trash"></i></button>'+
+      '</div></div>';
+  }).join('');
+  rpg(pgs);
+}
+function rpg(t){
+  const pg2=document.getElementById('pg');if(t<=1){pg2.innerHTML='';return;}
+  let h2='';if(pg>1)h2+='<button class="pb2" onclick="gp('+(pg-1)+')">&#8249;</button>';
+  for(let i=1;i<=t;i++){if(i===pg||i===1||i===t||Math.abs(i-pg)<=1)h2+='<button class="pb2'+(i===pg?' on':'')+'" onclick="gp('+i+')">'+i+'</button>';else if(Math.abs(i-pg)===2)h2+='<span style="padding:0 3px">…</span>';}
+  if(pg<t)h2+='<button class="pb2" onclick="gp('+(pg+1)+')">&#8250;</button>';
+  pg2.innerHTML=h2;
+}
+function gp(n){pg=n;rl();window.scrollTo(0,0);}
+
+// ── EDIT ──
+function openEdit(id){
+  const sid=String(id);
+  const p=merged().find(x=>String(x.id)===sid);if(!p)return;eId=sid;
+  document.getElementById('mN').value=p.title||'';document.getElementById('mD').value=p.description||'';
+  document.getElementById('mC').value=p.category||'cakes';document.getElementById('mP').value=p.price||'';
+  document.getElementById('mB').value=p.badge||'';document.getElementById('mI').value=p.image||'';
+  // Reset AI state
+  editAiD=null;document.getElementById('eAiR').style.display='none';
+  document.getElementById('eOv').classList.add('on');
+}
+function closeEdit(){document.getElementById('eOv').classList.remove('on');eId=null;}
+async function saveEdit(){
+  if(!eId)return;
+  const nm=document.getElementById('mN').value.trim();
+  if(!nm){toast('Name required','er');return;}
+  const cat=document.getElementById('mC').value;
+  const orig=merged().find(p=>String(p.id)===String(eId))||{};
+  const newImg=document.getElementById('mI').value.trim()||orig.image||null;
+  const updData={
+    nombre:nm,
+    descripcion:document.getElementById('mD').value.trim(),
+    categoria:cat,
+    precio:document.getElementById('mP').value?parseFloat(document.getElementById('mP').value):null,
+    imagen_url:newImg&&!newImg.startsWith('data:')?newImg:null,
+    etiqueta:document.getElementById('mB').value||null
+  };
+  try{
+    await sbUpdateProduct(eId, updData);
+    toast('☁️ Updated in Supabase!','ok');
+  }catch(e){
+    toast('⚠️ Update failed: '+e.message.slice(0,60),'er');
+    return;
+  }
+  // Reload fresh from Supabase — no localStorage involved
+  await loadProducts();
+  upS(); rl(); closeEdit();
+  toast('✅ Updated!','ok');
+}
+async function delP(id){
+  if(!confirm('Delete this product?'))return;
+  try{
+    await sbDeleteProduct(String(id));
+    toast('☁️ Deleted from Supabase','ok');
+  }catch(e){
+    toast('⚠️ Delete failed: '+e.message.slice(0,60),'er');
+    return;
+  }
+  // Reload fresh list from Supabase
+  await loadProducts();
+  upS(); rl();
+  toast('🗑️ Deleted','ok');
+}
+document.getElementById('eOv').addEventListener('click',function(e){if(e.target===this)closeEdit();});
+
+
+// ══════════════════════════════════════════════════
+// DATA BACKUP — Export/Import via JSON file
+// (Supabase is always the live source of truth)
+// ══════════════════════════════════════════════════
+
+async function exportData() {
+  const msg = document.getElementById('persistMsg');
+  msg.style.display = 'block';
+  msg.innerHTML = '⏳ Fetching products from Supabase…';
+  msg.style.color = '#7A5C00';
+  try{
+    const res = await sbFetch('/rest/v1/productos?select=*&order=id.asc');
+    if(!res.ok) throw new Error('Fetch failed: '+res.status);
+    const rows = await res.json();
+    const payload = JSON.stringify({ version:3, exported: new Date().toISOString(), products: rows }, null, 2);
+    const blob = new Blob([payload], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'productos-backup-'+Date.now()+'.json'; a.click();
+    URL.revokeObjectURL(url);
+    msg.innerHTML = '✅ Backup downloaded — '+rows.length+' products exported from Supabase';
+    msg.style.color = '#2E7D62';
+    toast('✅ Backup downloaded!','ok');
+  }catch(e){
+    msg.innerHTML = '❌ Export failed: '+e.message;
+    msg.style.color = '#c0392b';
+    toast('Export failed','er');
+  }
+}
+
+async function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const msg = document.getElementById('persistMsg');
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const rows = data.products || data;
+      if (!Array.isArray(rows)) throw new Error('Invalid format');
+      msg.style.display='block';
+      msg.innerHTML='⏳ Importing '+rows.length+' products to Supabase…';
+      msg.style.color='#7A5C00';
+      let added=0, failed=0;
+      for(const p of rows){
+        try{
+          const d={
+            nombre: p.nombre||p.title||'',
+            descripcion: p.descripcion||p.description||'',
+            categoria: p.categoria||p.category||'specialty',
+            precio: p.precio??p.price??null,
+            imagen_url: p.imagen_url||p.image||null,
+            etiqueta: p.etiqueta||p.badge||null
+          };
+          await sbFetch('/rest/v1/productos',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(d)});
+          added++;
+        }catch(err){ failed++; }
+      }
+      await loadProducts(); upS(); rl();
+      msg.innerHTML='✅ Imported '+added+' products to Supabase'+(failed?' ('+failed+' failed)':'');
+      msg.style.color='#2E7D62';
+      toast('✅ Imported '+added+' products!','ok');
+    } catch(err) {
+      toast('Import error: '+err.message,'er');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ── ADMIN GROQ CHAT ──
+const AC_PROMPT=`You are a smart admin assistant for Sweets by Dulce bakery. Help the admin manage their catalog, pricing, and business. You know about custom cakes, cupcakes, specialty desserts. Be concise and practical. Use emojis. For pricing, provide specific NY market rates.`;
+let acMsgs=[];
+
+function togAC(){
+  acOpen=!acOpen;
+  const w=document.getElementById('acW');
+  if(acOpen){w.classList.add('on');if(!acInit){acInit=true;acBotMsg("Hi! 🎂 I'm your admin assistant. I can help you write product descriptions, suggest prices, explain features, or analyze your catalog. What do you need?");}setTimeout(()=>document.getElementById('acI').focus(),400);}
+  else w.classList.remove('on');
+}
+function acBotMsg(t){
+  const m=document.getElementById('acM');const d=document.createElement('div');d.className='cm bot';d.textContent=t;m.appendChild(d);m.scrollTop=m.scrollHeight;
+}
+function acUsrMsg(t){
+  const m=document.getElementById('acM');const d=document.createElement('div');d.className='cm usr';d.textContent=t;m.appendChild(d);m.scrollTop=m.scrollHeight;
+}
+function acTyp(){
+  const m=document.getElementById('acM');const d=document.createElement('div');d.className='cm typ';d.id='acTyp';d.innerHTML='<div class="td"><span></span><span></span><span></span></div>';m.appendChild(d);m.scrollTop=m.scrollHeight;
+}
+function acRmTyp(){const t=document.getElementById('acTyp');if(t)t.remove();}
+async function acSend(){
+  const inp=document.getElementById('acI');const txt=inp.value.trim();if(!txt)return;inp.value='';
+  acUsrMsg(txt);acMsgs.push({role:'user',content:txt});
+  document.getElementById('acS').disabled=true;acTyp();
+  try{
+    const reply=await groq([{role:'system',content:AC_PROMPT},...acMsgs.slice(-8)],280);
+    acRmTyp();acMsgs.push({role:'assistant',content:reply});acBotMsg(reply);
+  }catch(e){acRmTyp();acBotMsg('Connection error. Check your internet and try again.');}
+  document.getElementById('acS').disabled=false;inp.focus();
+}
+function aqSend(t){document.getElementById('acI').value=t;acSend();const q=document.getElementById('acQ');if(q)q.style.display='none';}
+
+// ── TOAST ──
+function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(type||'');t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
+function h(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>
